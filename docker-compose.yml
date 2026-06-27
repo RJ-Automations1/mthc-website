@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=mysql://mthc:mthc_password@db:3306/mthc_db
+      - SQUARE_ACCESS_TOKEN=${SQUARE_ACCESS_TOKEN}
+      - SQUARE_LOCATION_ID=${SQUARE_LOCATION_ID}
+      - SQUARE_ENVIRONMENT=${SQUARE_ENVIRONMENT:-sandbox}
+      - SESSION_SECRET=${SESSION_SECRET:-change_me_in_production}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=mthc_db
+      - MYSQL_USER=mthc
+      - MYSQL_PASSWORD=mthc_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./server/db/migrations/0000_initial.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_data:
