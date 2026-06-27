@@ -6,7 +6,10 @@ export default function Home() {
     <div>
       {/* Hero Section */}
       <section className="relative bg-maroon overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-maroon via-maroon-900 to-black opacity-90" />
+        <div className="absolute inset-0">
+          <img src="/images/team-photo-field.jpg" alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-br from-maroon via-maroon-900 to-black opacity-80" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-36">
           <div className="text-center">
             <img
@@ -103,6 +106,31 @@ export default function Home() {
                 Meet our board and learn how to join the MTHC community.
               </p>
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Community & Impact */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="section-heading text-center mb-12">Community &amp; Impact</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { img: 'nola-minority-baseball-tournament.png', title: 'NOLA Minority Baseball Tournament', desc: 'Maroon Tigers compete at the MBP HBCU Final 4.' },
+              { img: 'hbcu-allstar-team-photo.jpg', title: 'Giving Back to ATL Youth', desc: 'Players mentoring at the MBP All-Star youth clinic.' },
+              { img: 'den-of-honor-induction.jpg', title: 'Den of Honor Induction', desc: 'Celebrating excellence with Dr. Reuben Brigety.' },
+              { img: 'mbp-allstar-2026.png', title: 'Represent Yourself 5K', desc: 'Community events that fuel the program.' },
+            ].map((c) => (
+              <div key={c.title} className="card overflow-hidden">
+                <div className="aspect-[4/3] overflow-hidden bg-gray-200">
+                  <img src={`/images/${c.img}`} alt={c.title} className="w-full h-full object-cover" />
+                </div>
+                <div className="p-5">
+                  <h3 className="font-heading font-bold text-maroon mb-1">{c.title}</h3>
+                  <p className="text-gray-600 text-sm">{c.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

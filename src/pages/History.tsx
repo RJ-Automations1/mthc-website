@@ -56,6 +56,11 @@ export default function History() {
         </div>
       </section>
 
+      {/* Team banner */}
+      <section className="relative bg-black">
+        <img src="/images/team-photo-field.jpg" alt="Morehouse Baseball team on the field" className="w-full h-64 md:h-96 object-cover opacity-90" />
+      </section>
+
       {/* Tab Navigation */}
       <section className="border-b border-gray-200 bg-white sticky top-20 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -112,6 +117,23 @@ export default function History() {
                 and success of the program, providing the resources and support needed to
                 compete at the highest level of NCAA Division II baseball.
               </p>
+            </div>
+
+            {/* Honors & recognition graphics */}
+            <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { img: 'siac-portfolio.png', label: 'SIAC Championships' },
+                { img: 'bcn-poll-champions.jpg', label: 'Black College Nines Poll' },
+                { img: 'den-of-honor-logo.jpg', label: 'Den of Honor' },
+                { img: 'morehouse-baseball-athletics.jpg', label: 'Maroon Tigers Baseball' },
+              ].map((g) => (
+                <div key={g.label} className="card overflow-hidden">
+                  <div className="aspect-square overflow-hidden bg-gray-100">
+                    <img src={`/images/${g.img}`} alt={g.label} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="p-2 text-center text-xs font-medium text-gray-600">{g.label}</div>
+                </div>
+              ))}
             </div>
 
             {/* Timeline */}

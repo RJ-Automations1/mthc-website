@@ -25,6 +25,11 @@ export default function BoardMembers() {
       {/* Hero */}
       <section className="bg-maroon py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <img
+            src="/images/morehouse-baseball-alumni-logo.png"
+            alt="Morehouse Baseball Alumni Association"
+            className="h-24 w-24 mx-auto mb-6 rounded-full bg-white p-1 shadow-lg"
+          />
           <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-4">
             Board Members
           </h1>
