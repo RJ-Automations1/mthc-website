@@ -19,7 +19,6 @@ export default function PageHero({ eyebrow, title, subtitle, image, children }: 
         className="absolute inset-0 -z-10 h-full w-full object-cover opacity-60 animate-slow-zoom"
       />
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-ink via-ink/60 to-maroon-900/40" />
-      <div className="absolute inset-0 -z-10 grain" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-up">
         <span className="eyebrow text-gold">{eyebrow}</span>
         <h1 className="mt-4 font-display uppercase font-bold text-white text-5xl md:text-7xl leading-[0.9]">

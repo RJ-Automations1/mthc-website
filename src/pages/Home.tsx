@@ -46,7 +46,6 @@ export default function Home() {
         />
         <div className="absolute inset-0 -z-10 bg-gradient-to-t from-ink via-ink/60 to-ink/30" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-maroon-900/70 via-transparent to-transparent" />
-        <div className="absolute inset-0 -z-10 grain" />
 
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-28 md:pb-32 pt-32">
           <div className="max-w-3xl animate-fade-up">
@@ -179,7 +178,6 @@ export default function Home() {
 
       {/* Donation tiers CTA */}
       <section className="relative isolate overflow-hidden py-20 md:py-28 bg-maroon">
-        <div className="absolute inset-0 -z-10 grain" />
         <div className="absolute -right-32 -top-32 -z-10 w-96 h-96 rounded-full border-[40px] border-white/5" />
         <div className="absolute -left-24 -bottom-40 -z-10 w-96 h-96 rounded-full border-[40px] border-gold/10" />
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

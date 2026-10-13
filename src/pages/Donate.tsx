@@ -1,7 +1,10 @@
 import { useState } from 'react';
-import { Check, CreditCard, Shield } from 'lucide-react';
+import { Check, ExternalLink, Shield } from 'lucide-react';
 import PageHero from '../components/PageHero';
 import { PHOTOS } from '../lib/photos';
+
+// MTHC's Square donation page (donor enters the amount on Square)
+const SQUARE_DONATION_URL = 'https://square.link/u/JsvQI9hw';
 
 type Tier = 'single' | 'double' | 'triple' | 'homerun';
 
@@ -79,46 +82,28 @@ export default function Donate() {
     setStep('consent');
   };
 
-  const handleConsentSubmit = (e: React.FormEvent) => {
+  const handleConsentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.consentGiven) {
       setError('You must agree to the terms to proceed.');
       return;
     }
     setError('');
-    setStep('payment');
-  };
-
-  const handlePayment = async () => {
     setLoading(true);
-    setError('');
 
+    // Save the donor for the leaderboard before they pay on Square. If this
+    // fails we still let them give — the payment matters more than the record.
     try {
-      // In production, this integrates with Square Web Payments SDK
-      // The Square payment form generates a sourceId (payment token)
-      // which is sent to our backend for processing
-
-      const response = await fetch('/api/donate', {
+      await fetch('/api/donate/pledge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          tier: selectedTier,
-          sourceId: 'SQUARE_PAYMENT_TOKEN', // Replaced by Square SDK in production
-        }),
+        body: JSON.stringify({ ...formData, tier: selectedTier }),
       });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setStep('success');
-      } else {
-        setError(data.message || 'Payment failed. Please try again.');
-      }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      console.error('Could not save pledge', err);
     } finally {
       setLoading(false);
+      setStep('payment');
     }
   };
 
@@ -182,6 +167,12 @@ export default function Donate() {
           {step === 'tier' && (
             <div>
               <h2 className="section-heading text-center">Choose Your Donation Tier</h2>
+              <p className="text-center text-gray-600 -mt-2 mb-8">
+                Want to give a different amount?{' '}
+                <a href={SQUARE_DONATION_URL} target="_blank" rel="noopener noreferrer" className="text-maroon font-semibold hover:underline">
+                  Donate any amount on Square
+                </a>
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {TIERS.map(tier => (
                   <button
@@ -399,8 +390,8 @@ export default function Donate() {
                     >
                       Back
                     </button>
-                    <button type="submit" className="btn-primary">
-                      Proceed to Payment
+                    <button type="submit" disabled={loading} className="btn-primary disabled:opacity-50">
+                      {loading ? 'Saving...' : 'Proceed to Payment'}
                     </button>
                   </div>
                 </form>
@@ -423,30 +414,27 @@ export default function Donate() {
                   </div>
                 </div>
 
-                {/* Square Payment Form Placeholder */}
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-6">
-                  <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 font-medium mb-2">Square Payment Form</p>
-                  <p className="text-sm text-gray-500">
-                    In production, the Square Web Payments SDK card form renders here.
-                    <br />
-                    Supports credit/debit cards, Apple Pay, and Google Pay.
-                  </p>
-                  {/* 
-                    Integration note: Load Square Web Payments SDK script,
-                    initialize with your application ID and location ID,
-                    then attach the card payment form to this container.
-                    See: https://developer.squareup.com/docs/web-payments/overview
-                  */}
-                  <div id="square-card-container" className="mt-4" />
-                </div>
+                <ol className="space-y-3 text-gray-700 mb-8">
+                  <li className="flex gap-3">
+                    <span className="w-6 h-6 shrink-0 rounded-full bg-maroon text-white text-xs font-bold flex items-center justify-center">1</span>
+                    <span>Open our secure Square donation page.</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="w-6 h-6 shrink-0 rounded-full bg-maroon text-white text-xs font-bold flex items-center justify-center">2</span>
+                    <span>Enter <strong>${selectedTierData?.amount}</strong> as your donation amount.</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="w-6 h-6 shrink-0 rounded-full bg-maroon text-white text-xs font-bold flex items-center justify-center">3</span>
+                    <span>Pay with card, Apple Pay, or Google Pay. Square emails your receipt.</span>
+                  </li>
+                </ol>
 
                 <div className="flex items-center space-x-2 text-sm text-gray-500 mb-6">
                   <Shield className="w-4 h-4" />
-                  <span>Payments processed securely by Square</span>
+                  <span>Payments processed securely by Square. MTHC never sees your card details.</span>
                 </div>
 
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <button
                     type="button"
                     onClick={() => setStep('consent')}
@@ -454,13 +442,15 @@ export default function Donate() {
                   >
                     Back
                   </button>
-                  <button
-                    onClick={handlePayment}
-                    disabled={loading}
-                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                  <a
+                    href={SQUARE_DONATION_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setStep('success')}
+                    className="btn-primary"
                   >
-                    {loading ? 'Processing...' : `Donate $${selectedTierData?.amount}`}
-                  </button>
+                    Donate ${selectedTierData?.amount} on Square <ExternalLink className="w-4 h-4" />
+                  </a>
                 </div>
               </div>
             </div>
@@ -476,12 +466,16 @@ export default function Donate() {
                 Thank You!
               </h2>
               <p className="text-xl text-gray-700 mb-2">
-                Your {selectedTierData?.name} donation of ${selectedTierData?.amount} has been received.
+                Finish your {selectedTierData?.name} donation of ${selectedTierData?.amount} in the Square tab we just opened.
               </p>
               <p className="text-gray-600 mb-8">
-                A confirmation email has been sent to {formData.email}.
+                Square will email your receipt. Your name will appear on the leaderboard once
+                MTHC confirms your gift.
                 <br />
-                Your donation will appear on the leaderboard after approval.
+                Tab didn&apos;t open?{' '}
+                <a href={SQUARE_DONATION_URL} target="_blank" rel="noopener noreferrer" className="text-maroon font-semibold hover:underline">
+                  Open the Square donation page
+                </a>
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <a href="/leaderboard" className="btn-primary inline-block">

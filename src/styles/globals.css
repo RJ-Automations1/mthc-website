@@ -72,9 +72,4 @@
   .text-gradient-maroon {
     @apply bg-gradient-to-r from-maroon to-maroon-500 bg-clip-text text-transparent;
   }
-
-  .grain {
-    background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-    background-size: 3px 3px;
-  }
 }

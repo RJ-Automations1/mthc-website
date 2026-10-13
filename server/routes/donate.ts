@@ -112,6 +112,42 @@ router.post('/', async (req, res) => {
   }
 });
 
+// POST /api/donate/pledge - Record a donor before they pay on the MTHC Square
+// donation link. Payment happens on Square, so the pledge stays unapproved
+// until an admin matches it to the Square payment.
+const pledgeSchema = donationSchema.omit({ sourceId: true });
+
+router.post('/pledge', async (req, res) => {
+  try {
+    const validated = pledgeSchema.parse(req.body);
+    const tier = DONATION_TIERS[validated.tier];
+
+    const [donor] = await db.insert(donors).values({
+      firstName: validated.firstName,
+      lastName: validated.lastName,
+      email: validated.email,
+      phone: validated.phone || null,
+      amount: String(tier.amount / 100),
+      tier: validated.tier,
+      displayName: validated.anonymous ? 'Anonymous' : (validated.displayName || `${validated.firstName} ${validated.lastName}`),
+      anonymous: validated.anonymous,
+      approved: false,
+      consentGiven: validated.consentGiven,
+      message: validated.message || null,
+    }).returning({ id: donors.id });
+
+    res.status(201).json({ success: true, donorId: donor.id, tier: tier.name, amount: tier.amount / 100 });
+  } catch (error: any) {
+    console.error('Pledge error:', error);
+
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ success: false, message: 'Validation error', errors: error.errors });
+    }
+
+    res.status(500).json({ success: false, message: 'Could not save your information. Please try again.' });
+  }
+});
+
 // GET /api/donate/tiers - Get available donation tiers
 router.get('/tiers', (_req, res) => {
   const tiers = Object.entries(DONATION_TIERS).map(([key, value]) => ({
