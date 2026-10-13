@@ -164,10 +164,11 @@ export default function History() {
                   { year: '1867', event: 'Morehouse College founded in Augusta, Georgia' },
                   { year: '1890', event: 'Morehouse baseball program established' },
                   { year: '1913', event: 'SIAC founded at Morehouse College on December 30' },
+                  { year: '1991', event: 'Baseball reestablished after a 10-year absence, led by students including MTHC founders' },
                   { year: '2017', event: 'Baseball program revived after hiatus' },
                   { year: '2019', event: 'SIAC Conference Championship' },
                   { year: '2024', event: 'SIAC Conference Championship & NCAA D2 Tournament appearance' },
-                  { year: '2026', event: 'Current season: 25-20 record' },
+                  { year: '2026', event: '25-21 season and a historic SIAC Tournament run' },
                 ].map((item) => (
                   <li key={item.year} className="pl-8 relative">
                     <span className="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-maroon ring-4 ring-cream" />

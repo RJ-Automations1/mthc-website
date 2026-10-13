@@ -21,6 +21,9 @@ export const PHOTOS = {
   leaderboardHero: { src: '/images/senior-day.jpg', position: 'center 55%' },
   boardHero: { src: '/images/hbcu-allstar-team-photo.jpg', position: 'center 35%' },
 
+  // Board page founders feature (Starr #11, Edwards #12, Phillips #3)
+  boardFounders: { src: '/images/board-founders.jpg', position: 'center 40%' },
+
   // Home page feature split
   homeMission: { src: '/images/catcher-home-plate.jpg', position: 'center 40%' },
 

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { db } from '../db';
 import { boardMembers } from '../db/schema';
 import { eq, asc } from 'drizzle-orm';
+import { BOARD_MEMBERS } from '../db/init';
 
 const router = Router();
 
@@ -16,8 +17,9 @@ router.get('/', async (_req, res) => {
 
     res.json(members);
   } catch (error) {
-    console.error('Board members error:', error);
-    res.status(500).json({ message: 'Failed to load board members' });
+    // Keep the board visible even if the database is unreachable
+    console.error('Board members error, serving built-in board:', error);
+    res.json(BOARD_MEMBERS.map((m, i) => ({ id: i + 1, imageUrl: null, ...m })));
   }
 });
 

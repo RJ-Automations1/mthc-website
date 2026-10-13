@@ -12,6 +12,10 @@ interface BoardMember {
   order: number;
 }
 
+// Jersey numbers from the founders photo, keyed by last name
+const JERSEYS: Record<string, number> = { starr: 11, edwards: 12, phillips: 3 };
+const jerseyNumber = (name: string) => JERSEYS[name.trim().split(/\s+/).pop()!.toLowerCase()];
+
 export default function BoardMembers() {
   const [members, setMembers] = useState<BoardMember[]>([]);
 
@@ -37,31 +41,59 @@ export default function BoardMembers() {
         />
       </PageHero>
 
+      {/* Founders feature */}
+      <section className="container-page pb-0">
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-12 gap-10 items-center">
+          <div className="lg:col-span-7">
+            <img
+              src={PHOTOS.boardFounders.src}
+              style={{ objectPosition: PHOTOS.boardFounders.position }}
+              alt="Maroon jerseys for Starr #11, Edwards #12, and Phillips #3"
+              className="w-full aspect-[3/2] object-cover rounded-3xl shadow-2xl"
+            />
+          </div>
+          <div className="lg:col-span-5">
+            <span className="eyebrow">Our Founders</span>
+            <h2 className="section-heading mt-4">Brothers Who Brought the Game Back</h2>
+            <p className="text-lg text-gray-600 leading-relaxed">
+              As Morehouse students, our founders helped reestablish Maroon Tiger baseball in 1991
+              after a decade-long absence. Decades later, they're still in the dugout for the program,
+              leading the Maroon Tiger Homerun Club in support of today's student-athletes.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Board Members Grid */}
       <section className="container-page">
         <div className="max-w-6xl mx-auto">
           {members.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {members.map(member => (
-                <div key={member.id} className="card p-6 text-center">
-                  <div className="w-28 h-28 mx-auto mb-4 rounded-full overflow-hidden bg-maroon/10 flex items-center justify-center">
-                    {member.imageUrl ? (
-                      <img
-                        src={member.imageUrl}
-                        alt={member.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <Users className="w-12 h-12 text-maroon/40" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {members.map(member => {
+                const jersey = jerseyNumber(member.name);
+                return (
+                  <article key={member.id} className="card hover:translate-y-0 p-7 flex flex-col">
+                    <div className="flex items-center gap-4">
+                      <div className="w-20 h-20 shrink-0 rounded-full overflow-hidden bg-maroon text-white flex items-center justify-center ring-4 ring-gold/30">
+                        {member.imageUrl ? (
+                          <img src={member.imageUrl} alt={member.name} className="w-full h-full object-cover" />
+                        ) : jersey ? (
+                          <span className="font-display text-4xl font-bold leading-none">{jersey}</span>
+                        ) : (
+                          <Users className="w-9 h-9 text-white/60" />
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-display uppercase text-2xl font-bold text-ink leading-tight">{member.name}</h3>
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold-dark mt-1">{member.title}</p>
+                      </div>
+                    </div>
+                    {member.bio && (
+                      <p className="text-gray-600 text-sm mt-5 leading-relaxed">{member.bio}</p>
                     )}
-                  </div>
-                  <h3 className="font-heading font-bold text-xl text-maroon">{member.name}</h3>
-                  <p className="text-gold-dark font-medium mt-1">{member.title}</p>
-                  {member.bio && (
-                    <p className="text-gray-600 text-sm mt-3 leading-relaxed">{member.bio}</p>
-                  )}
-                </div>
-              ))}
+                  </article>
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-16">

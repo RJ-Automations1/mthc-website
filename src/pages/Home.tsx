@@ -1,9 +1,9 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Trophy, Calendar, Heart, Users, ArrowRight, ChevronDown } from 'lucide-react';
 import { PHOTOS } from '../lib/photos';
 
 const STATS = [
-  { value: '25-20', label: '2026 Record' },
   { value: '1867', label: 'Established' },
   { value: 'SIAC', label: 'Conference' },
   { value: 'D-II', label: 'NCAA Division' },
@@ -24,6 +24,16 @@ const TIERS = [
 ];
 
 export default function Home() {
+  // Season record comes live from the official Morehouse Athletics schedule
+  const [record, setRecord] = useState('25-21');
+  useEffect(() => {
+    fetch('/api/schedule?season=2026')
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => data?.record && setRecord(data.record))
+      .catch(() => {});
+  }, []);
+  const stats = [{ value: record, label: '2026 Record' }, ...STATS];
+
   return (
     <div>
       {/* Hero */}
@@ -72,7 +82,7 @@ export default function Home() {
       <section id="stats" className="relative bg-maroon text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/15">
-            {STATS.map((s) => (
+            {stats.map((s) => (
               <div key={s.label} className="py-10 px-4 text-center">
                 <div className="font-display text-5xl md:text-6xl font-bold leading-none">{s.value}</div>
                 <div className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-gold-light">{s.label}</div>
