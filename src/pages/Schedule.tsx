@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Calendar, MapPin, Trophy } from 'lucide-react';
+import PageHero from '../components/PageHero';
+import { PHOTOS } from '../lib/photos';
 
 interface Game {
   id: number;
@@ -47,41 +49,38 @@ export default function Schedule() {
 
   return (
     <div>
-      {/* Hero */}
-      <section className="bg-maroon py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-4">
-            2026 Season Schedule
-          </h1>
-          <div className="flex items-center justify-center space-x-6 text-white/80">
-            <div>
-              <span className="text-3xl font-bold text-white">{schedule?.record || '25-20'}</span>
-              <span className="ml-2">Overall Record</span>
-            </div>
-          </div>
+      <PageHero
+        eyebrow="2026 Season"
+        title={<>Season <span className="text-gold">Schedule</span></>}
+        subtitle="Results, upcoming games, and where to catch the Maroon Tigers."
+        image={PHOTOS.scheduleHero}
+      >
+        <div className="inline-flex items-baseline gap-3 rounded-2xl bg-white/10 ring-1 ring-white/15 backdrop-blur px-6 py-4">
+          <span className="font-display text-5xl font-bold text-white leading-none">{schedule?.record || '25-20'}</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-light">Overall Record</span>
         </div>
-      </section>
+      </PageHero>
 
       {/* Record Summary */}
-      <section className="py-8 bg-gray-50 border-b">
+      <section className="py-8 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <div className="text-2xl font-bold text-green-600">{schedule?.wins || 25}</div>
+            <div className="bg-cream rounded-2xl p-5 ring-1 ring-black/5">
+              <div className="font-display text-4xl font-bold text-green-600">{schedule?.wins || 25}</div>
               <div className="text-sm text-gray-600">Wins</div>
             </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <div className="text-2xl font-bold text-red-600">{schedule?.losses || 20}</div>
+            <div className="bg-cream rounded-2xl p-5 ring-1 ring-black/5">
+              <div className="font-display text-4xl font-bold text-red-600">{schedule?.losses || 20}</div>
               <div className="text-sm text-gray-600">Losses</div>
             </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <div className="text-2xl font-bold text-maroon">
+            <div className="bg-cream rounded-2xl p-5 ring-1 ring-black/5">
+              <div className="font-display text-4xl font-bold text-maroon">
                 {schedule ? ((schedule.wins / (schedule.wins + schedule.losses)) * 100).toFixed(0) : '56'}%
               </div>
               <div className="text-sm text-gray-600">Win Pct</div>
             </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <div className="text-2xl font-bold text-maroon">SIAC</div>
+            <div className="bg-cream rounded-2xl p-5 ring-1 ring-black/5">
+              <div className="font-display text-4xl font-bold text-maroon">SIAC</div>
               <div className="text-sm text-gray-600">Conference</div>
             </div>
           </div>
@@ -103,7 +102,7 @@ export default function Schedule() {
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 filter === f.id
                   ? 'bg-maroon text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-white ring-1 ring-black/10 text-gray-700 hover:ring-maroon/40'
               }`}
             >
               {f.label}

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Users, Mail } from 'lucide-react';
+import PageHero from '../components/PageHero';
+import { PHOTOS } from '../lib/photos';
 
 interface BoardMember {
   id: number;
@@ -22,22 +24,18 @@ export default function BoardMembers() {
 
   return (
     <div>
-      {/* Hero */}
-      <section className="bg-maroon py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <img
-            src="/images/morehouse-baseball-alumni-logo.png"
-            alt="Morehouse Baseball Alumni Association"
-            className="h-24 w-24 mx-auto mb-6 rounded-full bg-white p-1 shadow-lg"
-          />
-          <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-4">
-            Board Members
-          </h1>
-          <p className="text-xl text-white/80 max-w-3xl mx-auto">
-            Meet the dedicated leaders who guide the Maroon Tiger Homerun Club.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        eyebrow="Leadership"
+        title={<>Board <span className="text-gold">Members</span></>}
+        subtitle="Meet the dedicated leaders who guide the Maroon Tiger Homerun Club."
+        image={PHOTOS.boardHero}
+      >
+        <img
+          src={PHOTOS.alumniLogo}
+          alt="Morehouse Baseball Alumni Association"
+          className="h-20 w-20 rounded-full bg-white p-1 shadow-lg"
+        />
+      </PageHero>
 
       {/* Board Members Grid */}
       <section className="container-page">
@@ -78,7 +76,7 @@ export default function BoardMembers() {
           )}
 
           {/* Contact Section */}
-          <div className="mt-16 text-center p-8 bg-gray-50 rounded-xl">
+          <div className="mt-16 text-center p-10 bg-white rounded-2xl ring-1 ring-black/5 shadow-sm">
             <h3 className="font-heading font-bold text-2xl text-maroon mb-4">
               Interested in Joining the Board?
             </h3>

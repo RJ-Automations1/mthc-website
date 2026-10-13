@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Trophy, Award, Star } from 'lucide-react';
+import PageHero from '../components/PageHero';
+import { PHOTOS } from '../lib/photos';
 
 interface Coach {
   id: number;
@@ -44,25 +46,15 @@ export default function History() {
 
   return (
     <div>
-      {/* Hero */}
-      <section className="bg-maroon py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-4">
-            Our History
-          </h1>
-          <p className="text-xl text-white/80 max-w-3xl mx-auto">
-            A legacy of excellence, perseverance, and championship baseball at Morehouse College.
-          </p>
-        </div>
-      </section>
-
-      {/* Team banner */}
-      <section className="relative bg-black">
-        <img src="/images/team-photo-field.jpg" alt="Morehouse Baseball team on the field" className="w-full h-64 md:h-96 object-cover opacity-90" />
-      </section>
+      <PageHero
+        eyebrow="Our History"
+        title={<>A Legacy of <span className="text-gold">Excellence</span></>}
+        subtitle={`${new Date().getFullYear() - 1890} years of Maroon Tiger baseball excellence.`}
+        image={PHOTOS.historyHero}
+      />
 
       {/* Tab Navigation */}
-      <section className="border-b border-gray-200 bg-white sticky top-20 z-40">
+      <section className="border-b border-gray-200 bg-white/90 backdrop-blur sticky top-20 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8 overflow-x-auto">
             {[
@@ -74,7 +66,7 @@ export default function History() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`py-4 px-2 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                className={`py-4 px-2 border-b-2 font-semibold uppercase tracking-wider text-sm whitespace-nowrap transition-colors ${
                   activeTab === tab.id
                     ? 'border-maroon text-maroon'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -92,11 +84,44 @@ export default function History() {
         {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div className="max-w-4xl mx-auto">
+            {/* The Beginning */}
+            <div className="grid md:grid-cols-5 gap-10 items-center mb-20">
+              <div className="md:col-span-3">
+                <span className="eyebrow">Est. 1890</span>
+                <h2 className="section-heading mt-4">The Beginning</h2>
+                <div className="text-gray-700 text-lg leading-relaxed space-y-5">
+                  <p>
+                    The Morehouse College baseball program was established in 1890, just 23 years
+                    after the college itself was founded. This makes Morehouse baseball one of the
+                    oldest collegiate baseball programs at a historically Black institution in the
+                    entire nation.
+                  </p>
+                  <p>
+                    In those early decades, the Maroon Tigers quickly established themselves as a force
+                    on the diamond. The program's connection to the broader HBCU athletic movement
+                    deepened on December 30, 1913, when representatives from several institutions
+                    gathered at Morehouse College to form the Southern Intercollegiate Athletic
+                    Conference (SIAC) — a conference that remains one of the most respected in Black
+                    collegiate athletics more than a century later.
+                  </p>
+                </div>
+              </div>
+              <div className="md:col-span-2 relative">
+                <div className="absolute -inset-3 rounded-3xl border-2 border-maroon/20 -rotate-2" />
+                <img
+                  src={PHOTOS.historyBeginning.src}
+                  style={{ objectPosition: PHOTOS.historyBeginning.position }}
+                  alt="Morehouse catcher behind the plate"
+                  className="relative w-full aspect-[4/5] object-cover rounded-3xl shadow-2xl grayscale contrast-125"
+                />
+              </div>
+            </div>
+
             <h2 className="section-heading">The Morehouse Baseball Story</h2>
             <div className="prose prose-lg max-w-none text-gray-700 space-y-6">
               <p>
-                Morehouse College Baseball has a storied history dating back to the institution's
-                founding in 1867. As one of the premier HBCUs in the nation, Morehouse has
+                Morehouse College Baseball has a storied history spanning more than 130 years.
+                As one of the premier HBCUs in the nation, Morehouse has
                 produced outstanding student-athletes who have excelled both on the diamond
                 and in their professional careers.
               </p>
@@ -121,41 +146,36 @@ export default function History() {
 
             {/* Honors & recognition graphics */}
             <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { img: 'siac-portfolio.png', label: 'SIAC Championships' },
-                { img: 'bcn-poll-champions.jpg', label: 'Black College Nines Poll' },
-                { img: 'den-of-honor-logo.jpg', label: 'Den of Honor' },
-                { img: 'morehouse-baseball-athletics.jpg', label: 'Maroon Tigers Baseball' },
-              ].map((g) => (
-                <div key={g.label} className="card overflow-hidden">
+              {PHOTOS.honors.map((g) => (
+                <div key={g.label} className="card group">
                   <div className="aspect-square overflow-hidden bg-gray-100">
-                    <img src={`/images/${g.img}`} alt={g.label} className="w-full h-full object-cover" />
+                    <img src={g.src} alt={g.label} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   </div>
-                  <div className="p-2 text-center text-xs font-medium text-gray-600">{g.label}</div>
+                  <div className="p-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-600">{g.label}</div>
                 </div>
               ))}
             </div>
 
             {/* Timeline */}
             <div className="mt-12">
-              <h3 className="text-2xl font-heading font-bold text-maroon mb-8">Key Milestones</h3>
-              <div className="space-y-6">
+              <h3 className="font-display uppercase text-3xl font-bold text-ink mb-8">Key Milestones</h3>
+              <ol className="relative border-l-2 border-maroon/20 ml-3 space-y-8">
                 {[
                   { year: '1867', event: 'Morehouse College founded in Augusta, Georgia' },
+                  { year: '1890', event: 'Morehouse baseball program established' },
+                  { year: '1913', event: 'SIAC founded at Morehouse College on December 30' },
                   { year: '2017', event: 'Baseball program revived after hiatus' },
                   { year: '2019', event: 'SIAC Conference Championship' },
                   { year: '2024', event: 'SIAC Conference Championship & NCAA D2 Tournament appearance' },
                   { year: '2026', event: 'Current season: 25-20 record' },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-start space-x-4">
-                    <div className="flex-shrink-0 w-20 text-right">
-                      <span className="text-maroon font-bold">{item.year}</span>
-                    </div>
-                    <div className="w-3 h-3 bg-maroon rounded-full mt-1.5 flex-shrink-0" />
-                    <p className="text-gray-700">{item.event}</p>
-                  </div>
+                ].map((item) => (
+                  <li key={item.year} className="pl-8 relative">
+                    <span className="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-maroon ring-4 ring-cream" />
+                    <span className="font-display text-3xl font-bold text-maroon leading-none">{item.year}</span>
+                    <p className="text-gray-700 mt-1">{item.event}</p>
+                  </li>
                 ))}
-              </div>
+              </ol>
             </div>
           </div>
         )}

@@ -1,98 +1,107 @@
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Menu, X, Heart } from 'lucide-react';
+import { PHOTOS } from '../lib/photos';
 
 const navigation = [
   { name: 'Home', href: '/' },
-  { name: 'About Us', href: '/about' },
+  { name: 'About', href: '/about' },
   { name: 'History', href: '/history' },
   { name: 'Schedule', href: '/schedule' },
-  { name: 'Donate', href: '/donate' },
   { name: 'Leaderboard', href: '/leaderboard' },
-  { name: 'Board Members', href: '/board' },
+  { name: 'Board', href: '/board' },
 ];
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => setMobileMenuOpen(false), [location.pathname]);
+
+  const solid = scrolled || mobileMenuOpen;
+
   return (
-    <header className="bg-maroon shadow-lg sticky top-0 z-50">
+    <header
+      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
+        solid ? 'bg-ink/90 backdrop-blur-md shadow-lg shadow-black/20' : 'bg-transparent'
+      }`}
+    >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3">
+          <Link to="/" className="flex items-center gap-3 group">
             <img
-              src="/mthc-logo.png"
+              src={PHOTOS.logo}
               alt="MTHC Logo"
-              className="h-14 w-14 rounded-full border-2 border-white"
+              className="h-12 w-12 rounded-full ring-2 ring-gold/70 group-hover:ring-gold transition"
             />
-            <div className="hidden sm:block">
-              <h1 className="text-white font-heading text-lg font-bold leading-tight">
+            <div className="leading-none">
+              <span className="block font-display uppercase text-white text-xl font-bold tracking-wide">
                 Maroon Tiger
-              </h1>
-              <p className="text-white/80 text-sm font-medium">
+              </span>
+              <span className="block text-gold text-[11px] font-semibold uppercase tracking-[0.3em] mt-1">
                 Homerun Club
-              </p>
+              </span>
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-1">
+          <div className="hidden lg:flex items-center gap-1">
             {navigation.map((item) => (
-              <Link
+              <NavLink
                 key={item.name}
                 to={item.href}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                  location.pathname === item.href
-                    ? 'bg-white/20 text-white'
-                    : 'text-white/80 hover:text-white hover:bg-white/10'
-                }`}
+                end={item.href === '/'}
+                className={({ isActive }) =>
+                  `relative px-3 py-2 text-sm font-semibold uppercase tracking-wider transition-colors after:absolute after:left-3 after:right-3 after:-bottom-0.5 after:h-0.5 after:bg-gold after:origin-left after:transition-transform ${
+                    isActive
+                      ? 'text-white after:scale-x-100'
+                      : 'text-white/65 hover:text-white after:scale-x-0 hover:after:scale-x-100'
+                  }`
+                }
               >
                 {item.name}
-              </Link>
+              </NavLink>
             ))}
-            <Link
-              to="/donate"
-              className="ml-4 bg-white text-maroon px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-100 transition-colors"
-            >
-              Support Us
+            <Link to="/donate" className="btn-gold ml-4 !py-2.5 !px-5 text-sm uppercase tracking-wider">
+              <Heart className="w-4 h-4" /> Donate
             </Link>
           </div>
 
-          {/* Mobile menu button */}
           <button
-            className="lg:hidden text-white p-2"
+            className="lg:hidden text-white p-2 -mr-2"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
           >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            {mobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
           </button>
         </div>
 
-        {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="lg:hidden pb-4">
-            <div className="flex flex-col space-y-1">
+          <div className="lg:hidden pb-6 animate-fade-up">
+            <div className="flex flex-col border-t border-white/10 pt-4">
               {navigation.map((item) => (
-                <Link
+                <NavLink
                   key={item.name}
                   to={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`px-3 py-2 rounded-md text-base font-medium ${
-                    location.pathname === item.href
-                      ? 'bg-white/20 text-white'
-                      : 'text-white/80 hover:text-white hover:bg-white/10'
-                  }`}
+                  end={item.href === '/'}
+                  className={({ isActive }) =>
+                    `px-2 py-3 font-display uppercase text-2xl font-semibold tracking-wide ${
+                      isActive ? 'text-gold' : 'text-white/80 hover:text-white'
+                    }`
+                  }
                 >
                   {item.name}
-                </Link>
+                </NavLink>
               ))}
-              <Link
-                to="/donate"
-                onClick={() => setMobileMenuOpen(false)}
-                className="mt-2 bg-white text-maroon px-4 py-2 rounded-lg font-bold text-center"
-              >
-                Support Us
+              <Link to="/donate" className="btn-gold mt-4 uppercase tracking-wider">
+                <Heart className="w-4 h-4" /> Donate
               </Link>
             </div>
           </div>

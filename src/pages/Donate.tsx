@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Check, CreditCard, Heart, Shield } from 'lucide-react';
+import { Check, CreditCard, Shield } from 'lucide-react';
+import PageHero from '../components/PageHero';
+import { PHOTOS } from '../lib/photos';
 
 type Tier = 'single' | 'double' | 'triple' | 'homerun';
 
@@ -122,17 +124,12 @@ export default function Donate() {
 
   return (
     <div>
-      {/* Hero */}
-      <section className="bg-maroon py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-4">
-            Step Up to the Plate
-          </h1>
-          <p className="text-xl text-white/80 max-w-3xl mx-auto">
-            Your donation directly supports Morehouse College Baseball. Choose your tier and make an impact.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        eyebrow="Donate"
+        title={<>Step Up to <span className="text-gold">the Plate</span></>}
+        subtitle="Your donation directly supports Morehouse College Baseball. Choose your tier and make an impact."
+        image={PHOTOS.donateHero}
+      />
 
       {/* Progress Steps */}
       <section className="py-6 bg-gray-50 border-b">
@@ -190,13 +187,21 @@ export default function Donate() {
                   <button
                     key={tier.id}
                     onClick={() => handleTierSelect(tier.id)}
-                    className={`card p-6 text-left transition-all hover:scale-105 ${
+                    className={`card group p-7 text-left hover:ring-2 hover:ring-maroon ${
                       selectedTier === tier.id ? 'ring-2 ring-maroon' : ''
                     }`}
                   >
-                    <div className="text-3xl mb-3">{tier.icon}</div>
-                    <h3 className="font-heading font-bold text-xl text-maroon">{tier.name}</h3>
-                    <div className="text-3xl font-bold text-gray-900 my-2">${tier.amount}</div>
+                    {/* Bases reached: 1 = single ... 4 = home run */}
+                    <div className="flex gap-1.5 mb-5">
+                      {[1, 2, 3, 4].map(b => (
+                        <span
+                          key={b}
+                          className={`h-1.5 w-8 rounded-full ${b <= TIERS.indexOf(tier) + 1 ? 'bg-maroon' : 'bg-gray-200'}`}
+                        />
+                      ))}
+                    </div>
+                    <h3 className="text-xs font-bold uppercase tracking-[0.25em] text-gold-dark">{tier.name}</h3>
+                    <div className="font-display text-6xl font-bold text-ink my-2">${tier.amount}</div>
                     <p className="text-gray-600">{tier.description}</p>
                   </button>
                 ))}
@@ -234,7 +239,7 @@ export default function Donate() {
                         required
                         value={formData.firstName}
                         onChange={e => setFormData({ ...formData, firstName: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent"
+                        className="input"
                       />
                     </div>
                     <div>
@@ -246,7 +251,7 @@ export default function Donate() {
                         required
                         value={formData.lastName}
                         onChange={e => setFormData({ ...formData, lastName: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent"
+                        className="input"
                       />
                     </div>
                   </div>
@@ -260,7 +265,7 @@ export default function Donate() {
                       required
                       value={formData.email}
                       onChange={e => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent"
+                      className="input"
                     />
                   </div>
 
@@ -272,7 +277,7 @@ export default function Donate() {
                       type="tel"
                       value={formData.phone}
                       onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent"
+                      className="input"
                     />
                   </div>
 
@@ -285,7 +290,7 @@ export default function Donate() {
                       value={formData.displayName}
                       onChange={e => setFormData({ ...formData, displayName: e.target.value })}
                       placeholder={`${formData.firstName} ${formData.lastName}`}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent"
+                      className="input"
                     />
                   </div>
 
@@ -311,7 +316,7 @@ export default function Donate() {
                       onChange={e => setFormData({ ...formData, message: e.target.value })}
                       rows={3}
                       placeholder="Leave a message of support for the team..."
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-maroon focus:border-transparent"
+                      className="input"
                     />
                   </div>
 
@@ -414,7 +419,7 @@ export default function Donate() {
                       <span className="font-bold text-maroon">{selectedTierData?.name} Donation</span>
                       <p className="text-sm text-gray-600">{formData.firstName} {formData.lastName}</p>
                     </div>
-                    <div className="text-2xl font-bold text-maroon">${selectedTierData?.amount}</div>
+                    <div className="font-display text-4xl font-bold text-maroon">${selectedTierData?.amount}</div>
                   </div>
                 </div>
 

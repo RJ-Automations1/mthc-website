@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Trophy, Medal, Star, Heart } from 'lucide-react';
+import PageHero from '../components/PageHero';
+import { PHOTOS } from '../lib/photos';
 
 interface Donor {
   id: number;
@@ -39,30 +41,25 @@ export default function Leaderboard() {
 
   return (
     <div>
-      {/* Hero */}
-      <section className="bg-maroon py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-4">
-            Donor Leaderboard
-          </h1>
-          <p className="text-xl text-white/80 max-w-3xl mx-auto">
-            Recognizing the generous supporters who make Morehouse Baseball possible.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        eyebrow="Our Supporters"
+        title={<>Donor <span className="text-gold">Leaderboard</span></>}
+        subtitle="Recognizing the generous supporters who make Morehouse Baseball possible."
+        image={PHOTOS.leaderboardHero}
+      />
 
       {/* Stats */}
-      <section className="py-8 bg-gray-50 border-b">
+      <section className="py-8 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 gap-4 max-w-md mx-auto text-center">
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <div className="text-2xl font-bold text-maroon">
+            <div className="bg-cream rounded-2xl p-5 ring-1 ring-black/5">
+              <div className="font-display text-4xl font-bold text-maroon">
                 {leaderboard?.totalDonors || 0}
               </div>
               <div className="text-sm text-gray-600">Total Donors</div>
             </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <div className="text-2xl font-bold text-maroon">
+            <div className="bg-cream rounded-2xl p-5 ring-1 ring-black/5">
+              <div className="font-display text-4xl font-bold text-maroon">
                 ${leaderboard?.totalRaised?.toLocaleString() || '0'}
               </div>
               <div className="text-sm text-gray-600">Total Raised</div>

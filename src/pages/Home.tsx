@@ -1,170 +1,206 @@
 import { Link } from 'react-router-dom';
-import { Trophy, Calendar, Heart, Users } from 'lucide-react';
+import { Trophy, Calendar, Heart, Users, ArrowRight, ChevronDown } from 'lucide-react';
+import { PHOTOS } from '../lib/photos';
+
+const STATS = [
+  { value: '25-20', label: '2026 Record' },
+  { value: '1867', label: 'Established' },
+  { value: 'SIAC', label: 'Conference' },
+  { value: 'D-II', label: 'NCAA Division' },
+];
+
+const WAYS = [
+  { to: '/donate', icon: Heart, title: 'Donate', desc: 'Support our players with equipment, travel, and training resources.' },
+  { to: '/schedule', icon: Calendar, title: 'Attend Games', desc: 'Check our schedule and come cheer on the Maroon Tigers.' },
+  { to: '/history', icon: Trophy, title: 'Our Legacy', desc: 'Explore our rich history of SIAC championships and achievements.' },
+  { to: '/board', icon: Users, title: 'Get Involved', desc: 'Meet our board and learn how to join the MTHC community.' },
+];
+
+const TIERS = [
+  { name: 'Single', amount: 100 },
+  { name: 'Double', amount: 200 },
+  { name: 'Triple', amount: 300 },
+  { name: 'Home Run', amount: 400 },
+];
 
 export default function Home() {
   return (
     <div>
-      {/* Hero Section */}
-      <section className="relative bg-maroon overflow-hidden">
-        <div className="absolute inset-0">
-          <img src="/images/team-photo-field.jpg" alt="" className="w-full h-full object-cover" />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-br from-maroon via-maroon-900 to-black opacity-80" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-36">
-          <div className="text-center">
-            <img
-              src="/mthc-logo.png"
-              alt="MTHC Logo"
-              className="h-32 w-32 mx-auto mb-8 rounded-full border-4 border-white shadow-2xl"
-            />
-            <h1 className="text-4xl md:text-6xl font-heading font-bold text-white mb-4">
+      {/* Hero */}
+      <section className="relative isolate min-h-[100svh] md:min-h-[640px] md:h-[92svh] md:max-h-[1000px] flex items-end overflow-hidden bg-ink">
+        <img
+          src={PHOTOS.homeHero.src}
+          style={{ objectPosition: PHOTOS.homeHero.position }}
+          alt="Morehouse Baseball team on the field"
+          className="absolute inset-0 -z-10 h-full w-full object-cover animate-slow-zoom"
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-ink via-ink/60 to-ink/30" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-maroon-900/70 via-transparent to-transparent" />
+        <div className="absolute inset-0 -z-10 grain" />
+
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-28 md:pb-32 pt-32">
+          <div className="max-w-3xl animate-fade-up">
+            <span className="eyebrow text-gold">Morehouse College Baseball Boosters</span>
+            <h1 className="mt-5 font-display uppercase font-bold text-white leading-[0.85] text-6xl sm:text-7xl md:text-8xl lg:text-9xl">
               Maroon Tiger
               <span className="block text-gold">Homerun Club</span>
             </h1>
-            <p className="text-xl md:text-2xl text-white/80 max-w-3xl mx-auto mb-8">
-              Supporting Morehouse College Baseball Excellence Since 1867
+            <p className="mt-6 text-lg md:text-xl text-white/80 max-w-xl">
+              Fueling Morehouse College Baseball excellence on the diamond and in life. Since 1867.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/donate" className="btn-gold text-lg px-8 py-4 inline-block text-center">
-                Make a Donation
+            <div className="mt-9 flex flex-col sm:flex-row gap-3">
+              <Link to="/donate" className="btn-gold text-base px-8 py-4 uppercase tracking-wider">
+                Make a Donation <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link to="/about" className="btn-secondary border-white text-white hover:bg-white hover:text-maroon text-lg px-8 py-4 inline-block text-center">
-                Learn More
+              <Link to="/about" className="btn-ghost-light text-base px-8 py-4 uppercase tracking-wider">
+                Our Mission
               </Link>
             </div>
           </div>
         </div>
-        {/* Decorative baseball stitching */}
-        <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-white via-gold to-white opacity-50" />
+
+        <a
+          href="#stats"
+          aria-label="Scroll down"
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/60 hover:text-white animate-bounce"
+        >
+          <ChevronDown className="w-7 h-7" />
+        </a>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 bg-gray-50">
+      {/* Stats */}
+      <section id="stats" className="relative bg-maroon text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-maroon">25-20</div>
-              <div className="text-gray-600 mt-1">2026 Record</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-maroon">1867</div>
-              <div className="text-gray-600 mt-1">Established</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-maroon">SIAC</div>
-              <div className="text-gray-600 mt-1">Conference</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-maroon">D-II</div>
-              <div className="text-gray-600 mt-1">NCAA Division</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="section-heading text-center mb-12">How You Can Help</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <Link to="/donate" className="card p-6 text-center group">
-              <div className="w-16 h-16 bg-maroon/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-maroon/20 transition-colors">
-                <Heart className="w-8 h-8 text-maroon" />
-              </div>
-              <h3 className="font-heading font-bold text-lg text-maroon mb-2">Donate</h3>
-              <p className="text-gray-600 text-sm">
-                Support our players with equipment, travel, and training resources.
-              </p>
-            </Link>
-
-            <Link to="/schedule" className="card p-6 text-center group">
-              <div className="w-16 h-16 bg-maroon/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-maroon/20 transition-colors">
-                <Calendar className="w-8 h-8 text-maroon" />
-              </div>
-              <h3 className="font-heading font-bold text-lg text-maroon mb-2">Attend Games</h3>
-              <p className="text-gray-600 text-sm">
-                Check our schedule and come cheer on the Maroon Tigers.
-              </p>
-            </Link>
-
-            <Link to="/history" className="card p-6 text-center group">
-              <div className="w-16 h-16 bg-maroon/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-maroon/20 transition-colors">
-                <Trophy className="w-8 h-8 text-maroon" />
-              </div>
-              <h3 className="font-heading font-bold text-lg text-maroon mb-2">Our Legacy</h3>
-              <p className="text-gray-600 text-sm">
-                Explore our rich history of SIAC championships and achievements.
-              </p>
-            </Link>
-
-            <Link to="/board" className="card p-6 text-center group">
-              <div className="w-16 h-16 bg-maroon/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-maroon/20 transition-colors">
-                <Users className="w-8 h-8 text-maroon" />
-              </div>
-              <h3 className="font-heading font-bold text-lg text-maroon mb-2">Get Involved</h3>
-              <p className="text-gray-600 text-sm">
-                Meet our board and learn how to join the MTHC community.
-              </p>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Community & Impact */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="section-heading text-center mb-12">Community &amp; Impact</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { img: 'nola-minority-baseball-tournament.png', title: 'NOLA Minority Baseball Tournament', desc: 'Maroon Tigers compete at the MBP HBCU Final 4.' },
-              { img: 'hbcu-allstar-team-photo.jpg', title: 'Giving Back to ATL Youth', desc: 'Players mentoring at the MBP All-Star youth clinic.' },
-              { img: 'den-of-honor-induction.jpg', title: 'Den of Honor Induction', desc: 'Celebrating excellence with Dr. Reuben Brigety.' },
-              { img: 'mbp-allstar-2026.png', title: 'Represent Yourself 5K', desc: 'Community events that fuel the program.' },
-            ].map((c) => (
-              <div key={c.title} className="card overflow-hidden">
-                <div className="aspect-[4/3] overflow-hidden bg-gray-200">
-                  <img src={`/images/${c.img}`} alt={c.title} className="w-full h-full object-cover" />
-                </div>
-                <div className="p-5">
-                  <h3 className="font-heading font-bold text-maroon mb-1">{c.title}</h3>
-                  <p className="text-gray-600 text-sm">{c.desc}</p>
-                </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/15">
+            {STATS.map((s) => (
+              <div key={s.label} className="py-10 px-4 text-center">
+                <div className="font-display text-5xl md:text-6xl font-bold leading-none">{s.value}</div>
+                <div className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-gold-light">{s.label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-maroon">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-heading font-bold text-white mb-4">
-            Every Donation Hits a Home Run
-          </h2>
-          <p className="text-xl text-white/80 mb-8">
-            From Singles to Home Runs, every tier of giving makes a direct impact
-            on Morehouse Baseball. Choose your level and step up to the plate.
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white/10 rounded-lg p-4">
-              <div className="text-gold font-bold text-lg">Single</div>
-              <div className="text-white text-2xl font-bold">$100</div>
-            </div>
-            <div className="bg-white/10 rounded-lg p-4">
-              <div className="text-gold font-bold text-lg">Double</div>
-              <div className="text-white text-2xl font-bold">$200</div>
-            </div>
-            <div className="bg-white/10 rounded-lg p-4">
-              <div className="text-gold font-bold text-lg">Triple</div>
-              <div className="text-white text-2xl font-bold">$300</div>
-            </div>
-            <div className="bg-white/10 rounded-lg p-4">
-              <div className="text-gold font-bold text-lg">Home Run</div>
-              <div className="text-white text-2xl font-bold">$400</div>
+      {/* Mission split */}
+      <section className="py-20 md:py-28">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div className="relative">
+            <div className="absolute -inset-3 md:-inset-4 rounded-3xl bg-gradient-to-br from-gold/40 to-maroon/30 rotate-2" />
+            <img
+              src={PHOTOS.homeMission.src}
+              style={{ objectPosition: PHOTOS.homeMission.position }}
+              alt="Morehouse catcher set behind home plate"
+              className="relative rounded-3xl w-full aspect-[4/5] max-h-[640px] object-cover shadow-2xl"
+            />
+          </div>
+          <div>
+            <span className="eyebrow">Who We Are</span>
+            <h2 className="section-heading mt-4">
+              Building champions <span className="text-maroon">on the diamond</span> and leaders in life.
+            </h2>
+            <p className="text-lg text-gray-600 leading-relaxed">
+              The Maroon Tiger Homerun Club is the official booster organization for Morehouse College
+              Baseball. Through fundraising, community engagement, and strategic partnerships, we give
+              our student-athletes the resources to excel on the field and in the classroom.
+            </p>
+            <Link to="/about" className="btn-primary mt-8 uppercase tracking-wider text-sm">
+              Learn More <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Ways to help */}
+      <section className="pb-20 md:pb-28">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
+            <div>
+              <span className="eyebrow">Join the Team</span>
+              <h2 className="section-heading mt-4 mb-0">How You Can Help</h2>
             </div>
           </div>
-          <Link to="/donate" className="btn-gold text-lg px-8 py-4 inline-block">
-            Donate Now
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {WAYS.map(({ to, icon: Icon, title, desc }) => (
+              <Link key={title} to={to} className="card group p-7 flex flex-col">
+                <div className="w-12 h-12 rounded-xl bg-maroon text-white flex items-center justify-center group-hover:bg-gold group-hover:text-ink transition-colors">
+                  <Icon className="w-6 h-6" />
+                </div>
+                <h3 className="mt-6 font-display uppercase text-2xl font-bold text-ink">{title}</h3>
+                <p className="mt-2 text-gray-600 text-sm flex-1">{desc}</p>
+                <span className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-maroon">
+                  Go <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Community & Impact */}
+      <section className="py-20 md:py-28 bg-ink text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <span className="eyebrow text-gold">Beyond the Field</span>
+          <h2 className="section-heading text-white mt-4 mb-12">Community &amp; Impact</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-4 md:h-[640px]">
+            {PHOTOS.community.map((c, i) => (
+              <figure
+                key={c.title}
+                className={`group relative overflow-hidden rounded-2xl bg-ink-800 min-h-[260px] ${
+                  i === 0 ? 'md:col-span-2 md:row-span-2' : i === 1 ? 'md:col-span-2' : ''
+                }`}
+              >
+                <img
+                  src={c.src}
+                  style={{ objectPosition: c.position }}
+                  alt={c.title}
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                <figcaption className="absolute bottom-0 p-5 md:p-6">
+                  <h3 className="font-display uppercase text-2xl font-bold leading-tight">{c.title}</h3>
+                  <p className="text-white/70 text-sm mt-1">{c.desc}</p>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Donation tiers CTA */}
+      <section className="relative isolate overflow-hidden py-20 md:py-28 bg-maroon">
+        <div className="absolute inset-0 -z-10 grain" />
+        <div className="absolute -right-32 -top-32 -z-10 w-96 h-96 rounded-full border-[40px] border-white/5" />
+        <div className="absolute -left-24 -bottom-40 -z-10 w-96 h-96 rounded-full border-[40px] border-gold/10" />
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <span className="eyebrow text-gold-light justify-center">Give Back</span>
+          <h2 className="mt-4 font-display uppercase font-bold text-white text-5xl md:text-7xl leading-[0.9]">
+            Every Donation Hits a Home Run
+          </h2>
+          <p className="mt-5 text-lg text-white/75 max-w-2xl mx-auto">
+            From Singles to Home Runs, every tier of giving makes a direct impact on Morehouse Baseball.
+            Choose your level and step up to the plate.
+          </p>
+          <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
+            {TIERS.map((t, i) => (
+              <Link
+                key={t.name}
+                to="/donate"
+                className={`group rounded-2xl p-6 text-left ring-1 transition-all hover:-translate-y-1 ${
+                  i === 3
+                    ? 'bg-gold text-ink ring-gold'
+                    : 'bg-white/5 text-white ring-white/15 hover:bg-white/10'
+                }`}
+              >
+                <div className={`text-xs font-bold uppercase tracking-[0.2em] ${i === 3 ? 'text-maroon-800' : 'text-gold-light'}`}>
+                  {t.name}
+                </div>
+                <div className="mt-2 font-display text-5xl font-bold">${t.amount}</div>
+              </Link>
+            ))}
+          </div>
+          <Link to="/donate" className="btn-gold mt-12 text-base px-10 py-4 uppercase tracking-wider">
+            Donate Now <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </section>

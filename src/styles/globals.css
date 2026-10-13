@@ -8,49 +8,73 @@
   }
 
   body {
-    @apply font-body text-gray-900 antialiased;
+    @apply font-body text-gray-900 antialiased bg-cream;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading;
+    @apply font-heading tracking-tight;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-maroon text-white px-6 py-3 rounded-lg font-semibold 
-           hover:bg-maroon-800 transition-colors duration-200
-           focus:outline-none focus:ring-2 focus:ring-maroon-600 focus:ring-offset-2;
+    @apply inline-flex items-center justify-center gap-2 bg-maroon text-white px-6 py-3 rounded-full font-semibold
+           hover:bg-maroon-800 transition-all duration-200 shadow-sm hover:shadow-md
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500 focus-visible:ring-offset-2;
   }
 
   .btn-secondary {
-    @apply bg-white text-maroon border-2 border-maroon px-6 py-3 rounded-lg font-semibold
-           hover:bg-maroon hover:text-white transition-colors duration-200
-           focus:outline-none focus:ring-2 focus:ring-maroon-600 focus:ring-offset-2;
+    @apply inline-flex items-center justify-center gap-2 bg-transparent text-maroon border-2 border-maroon px-6 py-3 rounded-full font-semibold
+           hover:bg-maroon hover:text-white transition-all duration-200
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500 focus-visible:ring-offset-2;
   }
 
   .btn-gold {
-    @apply bg-gold text-white px-6 py-3 rounded-lg font-semibold
-           hover:bg-gold-dark transition-colors duration-200
-           focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2;
+    @apply inline-flex items-center justify-center gap-2 bg-gold text-ink px-6 py-3 rounded-full font-bold
+           hover:bg-gold-light transition-all duration-200 shadow-lg shadow-gold/20
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2;
+  }
+
+  .btn-ghost-light {
+    @apply inline-flex items-center justify-center gap-2 border border-white/40 text-white px-6 py-3 rounded-full font-semibold
+           backdrop-blur-sm bg-white/5 hover:bg-white hover:text-ink transition-all duration-200;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-gold-dark;
+  }
+
+  .eyebrow::before {
+    content: '';
+    @apply block h-px w-8 bg-current;
   }
 
   .section-heading {
-    @apply text-3xl md:text-4xl font-heading font-bold text-maroon mb-6;
+    @apply font-display uppercase text-4xl md:text-5xl font-bold text-ink leading-[0.95] mb-6;
   }
 
   .card {
-    @apply bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden
-           hover:shadow-xl transition-shadow duration-300;
+    @apply bg-white rounded-2xl ring-1 ring-black/5 shadow-sm overflow-hidden
+           hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300;
   }
 
   .container-page {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12;
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20;
+  }
+
+  .input {
+    @apply w-full px-4 py-3 bg-white border border-gray-200 rounded-xl
+           focus:outline-none focus:ring-2 focus:ring-maroon/40 focus:border-maroon transition;
   }
 }
 
 @layer utilities {
   .text-gradient-maroon {
-    @apply bg-gradient-to-r from-maroon to-maroon-800 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-maroon to-maroon-500 bg-clip-text text-transparent;
+  }
+
+  .grain {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+    background-size: 3px 3px;
   }
 }
