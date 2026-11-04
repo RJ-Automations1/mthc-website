@@ -231,3 +231,23 @@ mthc-website/
 ## License
 
 Private — Maroon Tiger Homerun Club. All rights reserved.
+
+## Jay Edwards Baseball Invitational (JEBI) site
+
+The same codebase also builds the standalone **Jay Edwards Baseball Invitational**
+site — the same pattern as JVO Events → JVO Weddings. Two Render services, one repo:
+
+| Render service | Build-time env | What it serves |
+|---|---|---|
+| `mthc-website` | `VITE_JEBI_URL=https://jebi-tjbj.onrender.com` | MTHC site; the JEBI logo icon in the nav/footer links out to the JEBI site |
+| `jebi` | `VITE_SITE_MODE=jebi`, `VITE_MTHC_URL=https://mthc1867.org` | JEBI-only site at the root: `/`, `/about`, `/teams`, `/schedule`, `/tickets`, `/partnerships`, `/media`, `/shop`, `/contact` |
+
+- `VITE_*` values are baked in at **build time** — change them on Render, then redeploy.
+- Without `VITE_JEBI_URL`, the MTHC icon falls back to the in-app `/jebi` pages.
+- The JEBI service needs no database or Square secrets; it only needs
+  `NODE_ENV=production` and `NODE_VERSION` to match `mthc-website`.
+- All event content (schedule, teams, sponsor tiers, contacts, pending ticket /
+  stream / stats / shop links) lives in `src/pages/jebi/data.ts`. A link left as
+  `null` shows as "Coming soon" instead of a broken link.
+
+Local preview of the JEBI site: `VITE_SITE_MODE=jebi npx vite`

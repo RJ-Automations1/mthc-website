@@ -27,3 +27,6 @@ coverage/
 # Temp
 *.tmp
 *.swp
+
+# macOS resource-fork files (from copying via a Mac drive)
+._*
