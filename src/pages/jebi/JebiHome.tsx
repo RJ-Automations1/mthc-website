@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Ticket, HeartHandshake, ShoppingBag, Radio, BarChart3 } from 'lucide-react';
 import { JEBI, GAMES, DAYS, TEAMS, SPONSORS } from './data';
-import { EventMeta, GameCard, JebiSubNav, MaybeLink, PhotoGallery, SectionHeader, TeamBadge } from './components';
+import { EventMeta, GameCard, HeroScrim, JebiSubNav, MaybeLink, PhotoGallery, SectionHeader, TeamBadge } from './components';
 import { PHOTOS } from '../../lib/photos';
 import usePageTitle from './usePageTitle';
 import { jebiPath } from '../../lib/siteMode';
@@ -18,10 +18,10 @@ export default function JebiHome() {
           src={PHOTOS.jebiHomeHero.src}
           style={{ objectPosition: PHOTOS.jebiHomeHero.position }}
           alt=""
-          className="absolute inset-0 -z-10 h-full w-full object-cover opacity-45 animate-slow-zoom"
+          className="absolute inset-0 -z-10 h-full w-full object-cover contrast-[1.05] saturate-[1.1] animate-slow-zoom"
         />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-ink via-ink/70 to-jebi-dark/70" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-12 gap-10 items-center animate-fade-up">
+        <HeroScrim />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-12 gap-10 items-center animate-fade-up [text-shadow:0_2px_14px_rgba(0,0,0,0.55)]">
           <div className="lg:col-span-7 order-2 lg:order-1">
             <span className="eyebrow text-gold">{JEBI.edition} · Atlanta 2027</span>
             <h1 className="mt-4 font-display uppercase font-bold text-white text-5xl md:text-7xl leading-[0.9]">

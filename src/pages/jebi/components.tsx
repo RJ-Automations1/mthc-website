@@ -93,6 +93,22 @@ export function JebiSubNav() {
   );
 }
 
+/**
+ * Shading over hero photos. Dark only where text sits (left side, top under the
+ * nav, bottom edge) so the rest of the photo shows at full brightness. Phones get
+ * a little more overall shade because the text spans the full width there.
+ */
+export function HeroScrim() {
+  return (
+    <div aria-hidden="true" className="absolute inset-0 -z-10">
+      <div className="absolute inset-0 bg-ink/45 md:bg-ink/10" />
+      <div className="absolute inset-0 bg-gradient-to-r from-ink/85 via-ink/45 to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-ink/60 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-ink/70 to-transparent" />
+    </div>
+  );
+}
+
 /** Event hero — same treatment as the site's PageHero, with the JEBI sub-nav attached. */
 export function JebiHero({
   eyebrow,
@@ -114,13 +130,13 @@ export function JebiHero({
           src={image.src}
           style={{ objectPosition: image.position }}
           alt=""
-          className="absolute inset-0 -z-10 h-full w-full object-cover opacity-50 animate-slow-zoom"
+          className="absolute inset-0 -z-10 h-full w-full object-cover contrast-[1.05] saturate-[1.1] animate-slow-zoom"
         />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-ink via-ink/70 to-jebi-dark/60" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-up">
+        <HeroScrim />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-up [text-shadow:0_2px_14px_rgba(0,0,0,0.55)]">
           <span className="eyebrow text-gold">{eyebrow}</span>
           <h1 className="mt-4 font-display uppercase font-bold text-white text-5xl md:text-7xl leading-[0.9]">{title}</h1>
-          {subtitle && <p className="mt-5 max-w-2xl text-lg md:text-xl text-white/75">{subtitle}</p>}
+          {subtitle && <p className="mt-5 max-w-2xl text-lg md:text-xl text-white/90">{subtitle}</p>}
           <EventMeta className="mt-6" />
           {children && <div className="mt-8">{children}</div>}
         </div>
