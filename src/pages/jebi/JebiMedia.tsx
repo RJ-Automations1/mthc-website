@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { Radio, BarChart3, CalendarDays, Download, Newspaper, Camera, Megaphone, Archive, Mail, BadgeCheck } from 'lucide-react';
 import { JEBI, CONTACTS } from './data';
-import { JebiHero, MaybeLink, SectionHeader } from './components';
+import { JebiHero, MaybeLink, PhotoGallery, SectionHeader } from './components';
 import { PHOTOS } from '../../lib/photos';
 import usePageTitle from './usePageTitle';
 import { jebiPath } from '../../lib/siteMode';
@@ -17,7 +17,7 @@ const PRESS_KIT = [
 
 const SECTIONS = [
   { icon: Newspaper, title: 'Latest news', text: 'Press releases, game previews, and recaps will be published here by Perez Sports Group.' },
-  { icon: Camera, title: 'Photo & video gallery', text: 'Rights-approved photos and highlights will be posted during and after the event.' },
+  { icon: Camera, title: 'Video highlights', text: 'Game highlights and interviews will be posted during and after the event.' },
   { icon: Megaphone, title: 'Advisories & game-day notes', text: 'Media advisories, lineup notes, and official updates will appear here on game days.' },
   { icon: Archive, title: 'Archive', text: 'Final scores, box scores, recaps, and highlights will be archived after the Invitational.' },
 ];
@@ -84,6 +84,13 @@ export default function JebiMedia() {
               </div>
             </article>
           ))}
+        </div>
+
+        <div className="mt-16">
+          <SectionHeader eyebrow="Gallery" title="Photos">
+            Event photography will be added during and after the Invitational.
+          </SectionHeader>
+          <PhotoGallery photos={PHOTOS.jebiGallery} />
         </div>
       </section>
 

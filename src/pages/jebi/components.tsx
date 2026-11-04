@@ -156,11 +156,14 @@ export function SectionHeader({ eyebrow, title, children }: { eyebrow: string; t
 }
 
 export function TeamBadge({ team, size = 'md' }: { team: Team; size?: 'sm' | 'md' | 'lg' }) {
-  const dims = { sm: 'w-10 h-10 text-xs', md: 'w-16 h-16 text-base', lg: 'w-20 h-20 text-lg' }[size];
+  const dims = { sm: 'w-14 h-11 text-xs', md: 'w-20 h-16 text-base', lg: 'w-28 h-24 text-lg' }[size];
+  const pad = { sm: 'p-1', md: 'p-2', lg: 'p-3' }[size];
   if (team.logo) {
+    // Rounded white tile (not a circle) so wide wordmarks like Dillard and
+    // Savannah State stay readable at small sizes.
     return (
-      <div className={`${dims} rounded-full bg-jebi ring-2 ring-gold/60 flex items-center justify-center p-2.5 shrink-0`}>
-        <img src={team.logo} alt={`${team.school} logo`} className="max-h-full max-w-full object-contain" />
+      <div className={`${dims} ${pad} rounded-xl bg-white ring-1 ring-black/10 shadow-sm flex items-center justify-center shrink-0`}>
+        <img src={team.logo} alt={`${team.school} logo`} className="h-full w-full object-contain" />
       </div>
     );
   }
@@ -249,6 +252,30 @@ export function GameCard({ game, dayLabel }: { game: Game; dayLabel?: string }) 
         )}
       </div>
     </article>
+  );
+}
+
+/** Photo grid — first photo large on desktop, the rest in a tidy mosaic. */
+export function PhotoGallery({ photos }: { photos: { src: string; position?: string; alt: string }[] }) {
+  return (
+    <ul className="grid grid-cols-2 md:grid-cols-4 md:grid-rows-2 gap-3 md:h-[560px]">
+      {photos.slice(0, 5).map((p, i) => (
+        <li
+          key={p.src}
+          className={`overflow-hidden rounded-2xl bg-ink ring-1 ring-black/5 ${
+            i === 0 ? 'col-span-2 md:row-span-2 aspect-[4/3] md:aspect-auto' : 'aspect-square md:aspect-auto'
+          }`}
+        >
+          <img
+            src={p.src}
+            alt={p.alt}
+            loading="lazy"
+            style={{ objectPosition: p.position }}
+            className="h-full w-full object-cover hover:scale-[1.04] transition-transform duration-500"
+          />
+        </li>
+      ))}
+    </ul>
   );
 }
 

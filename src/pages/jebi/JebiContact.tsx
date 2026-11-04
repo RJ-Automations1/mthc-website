@@ -123,6 +123,19 @@ export default function JebiContact() {
         </div>
 
         <aside className="lg:col-span-5 space-y-5">
+          <div className="rounded-3xl bg-gradient-to-br from-jebi to-jebi-dark text-white p-6 shadow-lg">
+            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Event contact</h2>
+            <p className="mt-2 font-display uppercase text-3xl font-bold leading-none">{CONTACTS.event.name}</p>
+            <p className="mt-1 text-sm text-white/75">
+              {CONTACTS.event.title} · {CONTACTS.event.org}
+            </p>
+            <a href={`tel:${CONTACTS.event.phone.replace(/\D/g, '')}`} className="mt-4 flex items-center gap-2 text-sm hover:text-gold">
+              <Phone className="w-4 h-4 text-gold" aria-hidden="true" /> {CONTACTS.event.phone}
+            </a>
+            <a href={`mailto:${CONTACTS.event.email}`} className="mt-1.5 flex items-center gap-2 text-sm hover:text-gold">
+              <Mail className="w-4 h-4 text-gold" aria-hidden="true" /> {CONTACTS.event.email}
+            </a>
+          </div>
           <div className="card p-6 hover:translate-y-0 flex gap-4">
             <HeartHandshake className="w-8 h-8 text-jebi shrink-0" aria-hidden="true" />
             <div>

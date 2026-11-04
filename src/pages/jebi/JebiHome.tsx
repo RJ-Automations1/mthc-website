@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Ticket, HeartHandshake, ShoppingBag, Radio, BarChart3 } from 'lucide-react';
 import { JEBI, GAMES, DAYS, TEAMS, SPONSORS } from './data';
-import { EventMeta, GameCard, JebiSubNav, MaybeLink, SectionHeader, TeamBadge } from './components';
+import { EventMeta, GameCard, JebiSubNav, MaybeLink, PhotoGallery, SectionHeader, TeamBadge } from './components';
 import { PHOTOS } from '../../lib/photos';
 import usePageTitle from './usePageTitle';
 import { jebiPath } from '../../lib/siteMode';
@@ -199,8 +199,15 @@ export default function JebiHome() {
         </div>
       </section>
 
-      {/* Legacy teaser */}
+      {/* Photo gallery */}
       <section className="container-page">
+        <SectionHeader eyebrow="On the field & beyond" title="Morehouse Baseball Family" />
+        <PhotoGallery photos={PHOTOS.jebiGallery} />
+      </section>
+
+      {/* Legacy teaser */}
+      <section className="bg-white border-y border-black/5">
+      <div className="container-page">
         <div className="grid lg:grid-cols-12 gap-10 items-center">
           <div className="lg:col-span-5">
             <img
@@ -221,6 +228,7 @@ export default function JebiHome() {
             </Link>
           </div>
         </div>
+      </div>
       </section>
 
       {/* Sponsor strip — only once approved sponsors exist */}
