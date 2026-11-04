@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Menu, X, Heart } from 'lucide-react';
 import { PHOTOS } from '../lib/photos';
+import { JEBI } from '../pages/jebi/data';
+import { JEBI_SITE_URL, isExternalUrl } from '../lib/siteMode';
 
 const navigation = [
   { name: 'Home', href: '/' },
@@ -11,6 +13,23 @@ const navigation = [
   { name: 'Leaderboard', href: '/leaderboard' },
   { name: 'Board', href: '/board' },
 ];
+
+/**
+ * The Jay Edwards Baseball Invitational is its own destination — shown as the
+ * event's logo icon at the end of the nav. Points at VITE_JEBI_URL (the
+ * standalone JEBI Render site) when set, else the in-app /jebi pages.
+ */
+export function JebiLink({ className, children }: { className?: string; children: ReactNode }) {
+  return isExternalUrl(JEBI_SITE_URL) ? (
+    <a href={JEBI_SITE_URL} className={className} title={JEBI.name}>
+      {children}
+    </a>
+  ) : (
+    <Link to={JEBI_SITE_URL} className={className} title={JEBI.name}>
+      {children}
+    </Link>
+  );
+}
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -69,7 +88,17 @@ export default function Header() {
                 {item.name}
               </NavLink>
             ))}
-            <Link to="/donate" className="btn-gold ml-4 !py-2.5 !px-5 text-sm uppercase tracking-wider">
+
+            {/* JEBI — its own website, shown as the event logo icon */}
+            <JebiLink className="group ml-2 flex items-center rounded-full px-1.5 py-1 hover:bg-white/10 transition">
+              <img
+                src={JEBI.logo}
+                alt={`${JEBI.name} — visit the event site`}
+                className="h-10 w-auto drop-shadow group-hover:scale-105 transition-transform"
+              />
+            </JebiLink>
+
+            <Link to="/donate" className="btn-gold ml-3 !py-2.5 !px-5 text-sm uppercase tracking-wider">
               <Heart className="w-4 h-4" /> Donate
             </Link>
           </div>
@@ -100,6 +129,13 @@ export default function Header() {
                   {item.name}
                 </NavLink>
               ))}
+              <JebiLink className="mt-2 flex items-center gap-3 rounded-2xl bg-white/5 ring-1 ring-gold/30 px-3 py-3">
+                <img src={JEBI.logo} alt="" className="h-10 w-auto" />
+                <span className="leading-tight">
+                  <span className="block font-display uppercase text-xl font-semibold text-white">Jay Edwards Invitational</span>
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-gold">{JEBI.datesShort} · Atlanta</span>
+                </span>
+              </JebiLink>
               <Link to="/donate" className="btn-gold mt-4 uppercase tracking-wider">
                 <Heart className="w-4 h-4" /> Donate
               </Link>

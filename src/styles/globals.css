@@ -69,6 +69,13 @@
 }
 
 @layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   .text-gradient-maroon {
     @apply bg-gradient-to-r from-maroon to-maroon-500 bg-clip-text text-transparent;
   }

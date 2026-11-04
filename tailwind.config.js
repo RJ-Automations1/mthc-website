@@ -29,6 +29,11 @@ module.exports = {
           700: '#2a1e20',
         },
         cream: '#faf7f2',
+        // Jay Edwards Baseball Invitational palette (from the JEBI wireframe)
+        jebi: {
+          DEFAULT: '#7B102A',
+          dark: '#560D22',
+        },
       },
       fontFamily: {
         display: ['"Barlow Condensed"', 'Impact', 'sans-serif'],

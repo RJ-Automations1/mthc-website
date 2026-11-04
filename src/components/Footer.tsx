@@ -1,6 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Mail, MapPin, ArrowRight } from 'lucide-react';
 import { PHOTOS } from '../lib/photos';
+import { JEBI } from '../pages/jebi/data';
+import { JebiLink } from './Header';
 
 const SOCIALS = [
   {
@@ -95,6 +97,13 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
+            <JebiLink className="mt-6 flex items-center gap-3 rounded-2xl ring-1 ring-gold/30 bg-white/5 hover:bg-white/10 px-3 py-2.5 transition max-w-xs">
+              <img src={JEBI.logo} alt="" className="h-10 w-auto" />
+              <span className="leading-tight">
+                <span className="block text-sm font-semibold text-white">Jay Edwards Baseball Invitational</span>
+                <span className="block text-xs text-gold">{JEBI.datesShort} · Atlanta</span>
+              </span>
+            </JebiLink>
           </div>
 
           <div className="md:col-span-4">
