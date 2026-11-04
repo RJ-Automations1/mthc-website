@@ -125,17 +125,41 @@ export function JebiHero({
 }) {
   return (
     <>
-      <section className="relative isolate overflow-hidden bg-ink pt-32 pb-14 md:pt-40 md:pb-20">
+      <section
+        className={`relative isolate overflow-hidden bg-ink pt-32 pb-14 md:pt-40 md:pb-20 ${
+          image.fit === 'contain' ? 'md:min-h-[600px] md:flex md:flex-col md:justify-center md:pt-28 md:pb-16' : ''
+        }`}
+      >
         <img
           src={image.src}
           style={{ objectPosition: image.position }}
           alt=""
-          className="absolute inset-0 -z-10 h-full w-full object-cover contrast-[1.05] saturate-[1.1] animate-slow-zoom"
+          className={`absolute inset-0 -z-10 h-full w-full object-cover contrast-[1.05] saturate-[1.1] animate-slow-zoom ${
+            image.fit === 'contain' ? 'md:blur-md md:scale-110 md:brightness-75' : ''
+          }`}
         />
         <HeroScrim />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-up [text-shadow:0_2px_14px_rgba(0,0,0,0.55)]">
+        {image.fit === 'contain' && (
+          // Whole photo, framed on the right (desktop/tablet) — nothing cropped
+          <img
+            src={image.src}
+            alt=""
+            className="hidden md:block absolute top-24 right-6 lg:right-16 -z-10 h-[calc(100%-7.5rem)] w-auto aspect-[3/4] object-cover rounded-2xl ring-1 ring-white/15 shadow-2xl shadow-black/60 contrast-[1.05] saturate-[1.1]"
+          />
+        )}
+        <div
+          className={`w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-up [text-shadow:0_2px_14px_rgba(0,0,0,0.55)] ${
+            image.fit === 'contain' ? 'md:pr-[50%] lg:pr-[36%]' : ''
+          }`}
+        >
           <span className="eyebrow text-gold">{eyebrow}</span>
-          <h1 className="mt-4 font-display uppercase font-bold text-white text-5xl md:text-7xl leading-[0.9]">{title}</h1>
+          <h1
+            className={`mt-4 font-display uppercase font-bold text-white text-5xl leading-[0.9] ${
+              image.fit === 'contain' ? 'lg:text-6xl xl:text-7xl' : 'md:text-7xl'
+            }`}
+          >
+            {title}
+          </h1>
           {subtitle && <p className="mt-5 max-w-2xl text-lg md:text-xl text-white/90">{subtitle}</p>}
           <EventMeta className="mt-6" />
           {children && <div className="mt-8">{children}</div>}
