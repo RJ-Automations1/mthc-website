@@ -31,7 +31,7 @@ export const PHOTOS = {
   jebiPartnersHero: { src: '/images/jebi/photos/jebi-photo-6.jpg', position: 'center 45%' },
   jebiMediaHero: { src: '/images/jebi/photos/jebi-photo-5.jpg', position: 'center 4%' },
   jebiShopHero: { src: '/images/hbcu-allstar-team-photo.jpg', position: 'center 35%' },
-  jebiContactHero: { src: '/images/team-photo-field.jpg', position: 'center 60%' },
+  jebiContactHero: { src: '/images/team-2026.jpg', position: 'center 28%' },
   jebiMerch: { src: '/images/jebi/jebi-merchandise.jpg', position: 'center' },
   // Black-and-white coach portrait (cropped from a Morehouse Baseball post)
   jebiPortrait: { src: '/images/jebi/photos/jebi-photo-3.jpg', position: 'center 20%' },
