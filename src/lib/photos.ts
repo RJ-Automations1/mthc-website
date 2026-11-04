@@ -6,6 +6,8 @@
 export interface Photo {
   src: string;
   position?: string;
+  /** 'contain' shows the whole photo (used for tall photos in wide banners) */
+  fit?: 'cover' | 'contain';
 }
 
 export const PHOTOS = {
@@ -25,7 +27,9 @@ export const PHOTOS = {
   // Photos supplied for JEBI live in /images/jebi/photos/
   jebiHomeHero: { src: '/images/jebi/photos/jebi-photo-2.jpg', position: 'center 55%' },
   jebiAboutHero: { src: '/images/jebi/photos/jebi-photo-7.jpg', position: 'center 40%' },
-  jebiTeamsHero: { src: '/images/jebi/photos/jebi-photo-1.jpg', position: 'center 18%' },
+  // Tall photo: shown whole (fit: 'contain') on the right, over a blurred copy, so
+  // all three players are visible head to toe with their arms crossed.
+  jebiTeamsHero: { src: '/images/jebi/photos/jebi-photo-1.jpg', position: 'center 18%', fit: 'contain' as const },
   jebiScheduleHero: { src: '/images/jebi/photos/jebi-photo-4.jpg', position: 'center 35%' },
   jebiTicketsHero: { src: '/images/senior-day.jpg', position: 'center 55%' },
   jebiPartnersHero: { src: '/images/jebi/photos/jebi-photo-6.jpg', position: 'center 45%' },
@@ -34,7 +38,7 @@ export const PHOTOS = {
   jebiContactHero: { src: '/images/team-2026.jpg', position: 'center 28%' },
   jebiMerch: { src: '/images/jebi/jebi-merchandise.jpg', position: 'center' },
   // Black-and-white coach portrait (cropped from a Morehouse Baseball post)
-  jebiPortrait: { src: '/images/jebi/photos/jebi-photo-3.jpg', position: 'center 20%' },
+  jebiPortrait: { src: '/images/jebi/photos/jebi-photo-3.jpg', position: 'center top' },
   // Photo gallery (Home + Media)
   jebiGallery: [
     { src: '/images/jebi/photos/jebi-photo-2.jpg', position: 'center 55%', alt: 'Morehouse baseball team lined up on the field' },
