@@ -29,7 +29,7 @@ export const PHOTOS = {
   jebiScheduleHero: { src: '/images/jebi/photos/jebi-photo-4.jpg', position: 'center 35%' },
   jebiTicketsHero: { src: '/images/senior-day.jpg', position: 'center 55%' },
   jebiPartnersHero: { src: '/images/jebi/photos/jebi-photo-6.jpg', position: 'center 45%' },
-  jebiMediaHero: { src: '/images/jebi/photos/jebi-photo-5.jpg', position: 'center 25%' },
+  jebiMediaHero: { src: '/images/jebi/photos/jebi-photo-5.jpg', position: 'center 4%' },
   jebiShopHero: { src: '/images/hbcu-allstar-team-photo.jpg', position: 'center 35%' },
   jebiContactHero: { src: '/images/team-photo-field.jpg', position: 'center 60%' },
   jebiMerch: { src: '/images/jebi/jebi-merchandise.jpg', position: 'center' },
