@@ -29,6 +29,14 @@ export const JEBI = {
 };
 
 export const CONTACTS = {
+  // Primary event contact (from the JEBI Contact doc)
+  event: {
+    name: 'Sheriee K. Davis, J.D.',
+    title: 'CFO',
+    org: 'The JBE Group, LLC',
+    phone: '(404) 538-8840',
+    email: 'sdavis@jmegroupllc.com',
+  },
   sponsorship: {
     name: 'Sheriee Davis',
     phone: '(470) 553-8143',
@@ -74,20 +82,21 @@ export interface Team {
   name: string; // name used in the schedule
   school: string;
   location: string;
-  logo: string | null; // add licensed logo path, e.g. /images/jebi/teams/morehouse.png
+  logo: string | null; // /images/jebi/teams/<id>.png
   blurb: string;
   links: TeamLinks;
 }
 
-const PENDING_LINKS: TeamLinks = { schedule: null, roster: null, statistics: null, learnMore: null };
-
+// Learn More links come from the JEBI Teams doc. Schedule/roster/stats links were
+// checked live (Nov 2026). Dillard and Rust publish by season — update their
+// 2025-26 links to 2026-27 once those pages go up. `null` = "Coming soon".
 export const TEAMS: Team[] = [
   {
     id: 'morehouse',
     name: 'Morehouse',
     school: 'Morehouse College',
     location: 'Atlanta, GA',
-    logo: '/images/morehouse-athletics-logo.png', // white mark — shown on a maroon badge
+    logo: '/images/jebi/teams/morehouse.png',
     blurb: 'The host Maroon Tigers — the program Jay Edwards helped reestablish in 1991 and still coaches today.',
     links: {
       schedule: 'https://morehouseathletics.com/sports/baseball/schedule',
@@ -101,45 +110,70 @@ export const TEAMS: Team[] = [
     name: 'Dillard',
     school: 'Dillard University',
     location: 'New Orleans, LA',
-    logo: null,
+    logo: '/images/jebi/teams/dillard.png',
     blurb: 'The Bleu Devils bring New Orleans baseball to Atlanta for the inaugural Invitational.',
-    links: { ...PENDING_LINKS },
+    links: {
+      schedule: 'https://www.dillardbleudevils.com/sports/bsb/2025-26/schedule',
+      roster: 'https://www.dillardbleudevils.com/sports/bsb/2025-26/roster',
+      statistics: null,
+      learnMore: 'https://www.dillardbleudevils.com/sports/bsb/index',
+    },
   },
   {
     id: 'tuskegee',
     name: 'Tuskegee',
     school: 'Tuskegee University',
     location: 'Tuskegee, AL',
-    logo: null,
+    logo: '/images/jebi/teams/tuskegee.png',
     blurb: 'The Golden Tigers — a storied SIAC rival with deep HBCU baseball roots.',
-    links: { ...PENDING_LINKS },
+    links: {
+      schedule: 'https://goldentigersports.com/sports/baseball/schedule',
+      roster: 'https://goldentigersports.com/sports/baseball/roster',
+      statistics: 'https://goldentigersports.com/sports/baseball/stats',
+      learnMore: 'https://goldentigersports.com/sports/baseball',
+    },
   },
   {
     id: 'miami-hamilton',
     name: 'Miami Hamilton',
     school: 'Miami University Hamilton',
     location: 'Hamilton, OH',
-    logo: null,
-    blurb: 'The Harbingers travel south from Ohio to compete in the Invitational field.',
-    links: { ...PENDING_LINKS },
+    logo: '/images/jebi/teams/miami-hamilton.png',
+    blurb: 'The Harriers travel south from Ohio to compete in the Invitational field.',
+    links: {
+      schedule: 'https://miamioh.edu/regionals/athletics/harriers/sports/mens/baseball/schedule-and-results/index.html',
+      roster: 'https://miamioh.edu/regionals/athletics/harriers/sports/mens/baseball/roster.html',
+      statistics: null,
+      learnMore: 'https://miamioh.edu/regionals/athletics/harriers/sports/mens/baseball/',
+    },
   },
   {
     id: 'savannah-state',
     name: 'Savannah State',
     school: 'Savannah State University',
     location: 'Savannah, GA',
-    logo: null,
+    logo: '/images/jebi/teams/savannah-state.png',
     blurb: 'The Tigers represent coastal Georgia in a weekend of in-state HBCU baseball.',
-    links: { ...PENDING_LINKS },
+    links: {
+      schedule: 'https://ssuathletics.com/sports/baseball/schedule',
+      roster: 'https://ssuathletics.com/sports/baseball/roster',
+      statistics: 'https://ssuathletics.com/sports/baseball/stats',
+      learnMore: 'https://ssuathletics.com/sports/baseball',
+    },
   },
   {
     id: 'rust',
     name: 'Rust College',
     school: 'Rust College',
     location: 'Holly Springs, MS',
-    logo: null,
+    logo: '/images/jebi/teams/rust.png',
     blurb: 'The Bearcats round out the six-team field from Holly Springs, Mississippi.',
-    links: { ...PENDING_LINKS },
+    links: {
+      schedule: 'https://rustathletics.com/sports/bsb/2025-26/schedule',
+      roster: 'https://rustathletics.com/sports/bsb/2025-26/roster',
+      statistics: null,
+      learnMore: 'https://rustathletics.com/sports/bsb/index',
+    },
   },
 ];
 

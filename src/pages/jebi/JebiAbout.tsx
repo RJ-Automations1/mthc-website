@@ -74,18 +74,29 @@ export default function JebiAbout() {
       <section className="bg-white border-y border-black/5">
         <div className="container-page grid lg:grid-cols-12 gap-12">
           <div className="lg:col-span-5">
-            <img
-              src={PHOTOS.boardFounders.src}
-              style={{ objectPosition: PHOTOS.boardFounders.position }}
-              alt="MTHC founders — Corby Starr (#11), Jay Edwards (#12) and JTodd Phillips (#3)"
-              className="rounded-3xl w-full aspect-[4/5] object-cover shadow-xl lg:sticky lg:top-40"
-            />
+            <div className="lg:sticky lg:top-32 space-y-4">
+              <img
+                src={PHOTOS.jebiPortrait.src}
+                style={{ objectPosition: PHOTOS.jebiPortrait.position }}
+                alt="Morehouse baseball coach at the dugout fence"
+                className="rounded-3xl w-full aspect-[4/5] object-cover shadow-xl grayscale"
+              />
+              <img
+                src={PHOTOS.boardFounders.src}
+                style={{ objectPosition: PHOTOS.boardFounders.position }}
+                alt="MTHC founders' jerseys — Corby Starr (#11), Jay Edwards (#12) and JTodd Phillips (#3)"
+                className="rounded-2xl w-full aspect-[16/9] object-cover shadow-md"
+              />
+            </div>
           </div>
           <div className="lg:col-span-7">
             <SectionHeader eyebrow="The legacy" title={<>Javarro “Jay” Edwards</>}>
-              Jay Edwards is an entrepreneur, mentor, coach, and philanthropist whose commitment to Morehouse College,
-              baseball, and the development of young men has made a lasting impact. Through his leadership, mentorship,
-              coaching, and philanthropy, he has positively influenced countless young men both on and off the field.
+              Javarro “Jay” Edwards is a Chicago native, entrepreneur, mentor, coach and philanthropist. After
+              attending De La Salle Institute, he came to Morehouse College on a football scholarship and was part of
+              the team that shared the 1991 SIAC championship. A two-sport student-athlete, he helped reestablish
+              Morehouse baseball in 1991, earned a B.A. in Marketing in 1992, served on the baseball coaching staff
+              from 1993–94, and has continued supporting the program as an assistant coach since 2018. The
+              Invitational celebrates his commitment to developing young men on and off the field.
             </SectionHeader>
             <ol className="relative border-l-2 border-jebi/20 ml-2 space-y-8">
               {TIMELINE.map((t, i) => (

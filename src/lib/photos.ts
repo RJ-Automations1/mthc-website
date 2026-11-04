@@ -22,16 +22,28 @@ export const PHOTOS = {
   boardHero: { src: '/images/hbcu-allstar-team-photo.jpg', position: 'center 35%' },
 
   // Jay Edwards Baseball Invitational (/jebi) page heroes
-  jebiHomeHero: { src: '/images/team-photo-field.jpg', position: 'center 50%' },
-  jebiAboutHero: { src: '/images/catcher-action.jpg', position: 'center 30%' },
-  jebiTeamsHero: { src: '/images/team-2026.jpg', position: 'center 45%' },
-  jebiScheduleHero: { src: '/images/dugout.jpg', position: 'center 42%' },
+  // Photos supplied for JEBI live in /images/jebi/photos/
+  jebiHomeHero: { src: '/images/jebi/photos/jebi-photo-2.jpg', position: 'center 55%' },
+  jebiAboutHero: { src: '/images/jebi/photos/jebi-photo-7.jpg', position: 'center 40%' },
+  jebiTeamsHero: { src: '/images/jebi/photos/jebi-photo-1.jpg', position: 'center 18%' },
+  jebiScheduleHero: { src: '/images/jebi/photos/jebi-photo-4.jpg', position: 'center 35%' },
   jebiTicketsHero: { src: '/images/senior-day.jpg', position: 'center 55%' },
-  jebiPartnersHero: { src: '/images/program-support.jpg', position: 'center 40%' },
-  jebiMediaHero: { src: '/images/catcher-home-plate.jpg', position: 'center 40%' },
+  jebiPartnersHero: { src: '/images/jebi/photos/jebi-photo-6.jpg', position: 'center 45%' },
+  jebiMediaHero: { src: '/images/jebi/photos/jebi-photo-5.jpg', position: 'center 25%' },
   jebiShopHero: { src: '/images/hbcu-allstar-team-photo.jpg', position: 'center 35%' },
   jebiContactHero: { src: '/images/team-photo-field.jpg', position: 'center 60%' },
   jebiMerch: { src: '/images/jebi/jebi-merchandise.jpg', position: 'center' },
+  // Black-and-white coach portrait (cropped from a Morehouse Baseball post)
+  jebiPortrait: { src: '/images/jebi/photos/jebi-photo-3.jpg', position: 'center 20%' },
+  // Photo gallery (Home + Media)
+  jebiGallery: [
+    { src: '/images/jebi/photos/jebi-photo-2.jpg', position: 'center 55%', alt: 'Morehouse baseball team lined up on the field' },
+    { src: '/images/jebi/photos/jebi-photo-6.jpg', position: 'center 45%', alt: 'Players holding ceremonial checks during a field presentation' },
+    { src: '/images/jebi/photos/jebi-photo-7.jpg', position: 'center 40%', alt: 'Coaches and supporters gathered at a team dinner' },
+    { src: '/images/jebi/photos/jebi-photo-5.jpg', position: 'center 25%', alt: 'Three Morehouse coaches in maroon at the ballpark' },
+    { src: '/images/jebi/photos/jebi-photo-1.jpg', position: 'center 30%', alt: 'Three players posing on the field' },
+    { src: '/images/jebi/photos/jebi-photo-4.jpg', position: 'center 40%', alt: 'Players watching the game from behind the backstop' },
+  ],
 
   // Board page founders feature (Starr #11, Edwards #12, Phillips #3)
   boardFounders: { src: '/images/board-founders.jpg', position: 'center 40%' },
