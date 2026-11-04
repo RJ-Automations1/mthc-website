@@ -29,7 +29,7 @@ export const PHOTOS = {
   jebiAboutHero: { src: '/images/jebi/photos/jebi-photo-7.jpg', position: 'center 40%' },
   // Tall photo: shown whole (fit: 'contain') on the right, over a blurred copy, so
   // all three players are visible head to toe with their arms crossed.
-  jebiTeamsHero: { src: '/images/jebi/photos/jebi-photo-1.jpg', position: 'center 18%', fit: 'contain' },
+  jebiTeamsHero: { src: '/images/jebi/photos/jebi-photo-1.jpg', position: 'center 18%', fit: 'contain' as const },
   jebiScheduleHero: { src: '/images/jebi/photos/jebi-photo-4.jpg', position: 'center 35%' },
   jebiTicketsHero: { src: '/images/senior-day.jpg', position: 'center 55%' },
   jebiPartnersHero: { src: '/images/jebi/photos/jebi-photo-6.jpg', position: 'center 45%' },
