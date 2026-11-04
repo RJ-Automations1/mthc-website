@@ -6,8 +6,8 @@
 export interface Photo {
   src: string;
   position?: string;
-  /** 'contain' shows the whole photo (used for tall photos in wide banners) */
-  fit?: 'cover' | 'contain';
+  /** Tall photo: give its banner extra height so more of the photo shows */
+  tall?: boolean;
 }
 
 export const PHOTOS = {
@@ -27,9 +27,9 @@ export const PHOTOS = {
   // Photos supplied for JEBI live in /images/jebi/photos/
   jebiHomeHero: { src: '/images/jebi/photos/jebi-photo-2.jpg', position: 'center 55%' },
   jebiAboutHero: { src: '/images/jebi/photos/jebi-photo-7.jpg', position: 'center 40%' },
-  // Tall photo: shown whole (fit: 'contain') on the right, over a blurred copy, so
-  // all three players are visible head to toe with their arms crossed.
-  jebiTeamsHero: { src: '/images/jebi/photos/jebi-photo-1.jpg', position: 'center 18%', fit: 'contain' as const },
+  // Tall photo as the full background, in a taller banner, framed from the caps
+  // down through the crossed arms.
+  jebiTeamsHero: { src: '/images/jebi/photos/jebi-photo-1.jpg', position: 'center 10%', tall: true },
   jebiScheduleHero: { src: '/images/jebi/photos/jebi-photo-4.jpg', position: 'center 35%' },
   jebiTicketsHero: { src: '/images/senior-day.jpg', position: 'center 55%' },
   jebiPartnersHero: { src: '/images/jebi/photos/jebi-photo-6.jpg', position: 'center 45%' },
