@@ -16,6 +16,7 @@ export const JEBI = {
   datesShort: 'Feb 5–7, 2027',
   venue: 'Gresham Park',
   city: 'Atlanta, GA',
+  address: '2466 Bouldercrest Rd, Atlanta, GA 30316',
   logo: '/images/jebi/jebi-logo.png',
   sponsorPacket: '/docs/jebi-sponsorship-packet.pdf',
 
@@ -25,7 +26,10 @@ export const JEBI = {
   shopUrl: null as string | null, // e.g. 3RTY4.com storefront once confirmed
   watchUrl: null as string | null, // event-level stream
   liveStatsUrl: null as string | null, // event-level live stats
-  mapUrl: null as string | null, // verified venue entrance / parking
+  // Directions to the venue address
+  mapUrl: 'https://www.google.com/maps/search/?api=1&query=Gresham+Park+2466+Bouldercrest+Rd+Atlanta+GA+30316' as
+    | string
+    | null,
 };
 
 export const CONTACTS = {
@@ -212,17 +216,75 @@ const game = (id: string, day: Game['day'], time: string, away: string, home: st
   watchUrl: null,
 });
 
+// Updated schedule (Nov 9, 2026). Note: Savannah State plays twice Saturday and
+// Morehouse twice Sunday — each team still plays three games.
 export const GAMES: Game[] = [
   game('g1', 'fri', '9:30 AM', 'Morehouse', 'Dillard'),
   game('g2', 'fri', '12:30 PM', 'Tuskegee', 'Miami Hamilton'),
   game('g3', 'fri', '3:30 PM', 'Savannah State', 'Rust College'),
-  game('g4', 'sat', '9:30 AM', 'Tuskegee', 'Rust College'),
+  game('g4', 'sat', '9:30 AM', 'Savannah State', 'Miami Hamilton'),
   game('g5', 'sat', '12:30 PM', 'Savannah State', 'Dillard'),
-  game('g6', 'sat', '3:30 PM', 'Morehouse', 'Miami Hamilton'),
-  game('g7', 'sun', '9:30 AM', 'Tuskegee', 'Dillard'),
-  game('g8', 'sun', '12:30 PM', 'Savannah State', 'Miami Hamilton'),
+  game('g6', 'sat', '3:30 PM', 'Tuskegee', 'Rust College'),
+  game('g7', 'sun', '9:30 AM', 'Morehouse', 'Miami Hamilton'),
+  game('g8', 'sun', '12:30 PM', 'Tuskegee', 'Dillard'),
   game('g9', 'sun', '3:30 PM', 'Morehouse', 'Rust College'),
 ];
+
+// ── Calendar links ───────────────────────────────────────────────────────────
+// Game slots are three hours apart, so each game is blocked as a 3-hour event.
+const DAY_ISO: Record<Game['day'], string> = { fri: '20270205', sat: '20270206', sun: '20270207' };
+
+const to24 = (t: string) => {
+  const [hm, ap] = t.split(' ');
+  let [h, m] = hm.split(':').map(Number);
+  if (ap === 'PM' && h !== 12) h += 12;
+  if (ap === 'AM' && h === 12) h = 0;
+  return { h, m };
+};
+
+const stamp = (day: Game['day'], h: number, m: number) =>
+  `${DAY_ISO[day]}T${String(h).padStart(2, '0')}${String(m).padStart(2, '0')}00`;
+
+export const gameTimes = (g: Game) => {
+  const { h, m } = to24(g.time);
+  return { start: stamp(g.day, h, m), end: stamp(g.day, h + 3, m) };
+};
+
+export const gameTitle = (g: Game) => `${g.away} vs. ${g.home} — Jay Edwards Baseball Invitational`;
+
+/** Google Calendar "add event" link, in Eastern time. */
+export const googleCalendarUrl = (g: Game) => {
+  const { start, end } = gameTimes(g);
+  const q = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: gameTitle(g),
+    dates: `${start}/${end}`,
+    ctz: 'America/New_York',
+    location: `${JEBI.venue}, ${JEBI.address}`,
+    details: `Inaugural Jay Edwards Baseball Invitational. Schedule: https://jebi-tjbj.onrender.com/schedule`,
+  });
+  return `https://calendar.google.com/calendar/render?${q.toString()}`;
+};
+
+/** Full schedule as an .ics calendar file (works with Apple, Outlook and Google). */
+export const scheduleIcs = (games: Game[] = GAMES) => {
+  const esc = (s: string) => s.replace(/([,;\\])/g, '\\$1');
+  const now = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
+  const events = games.map((g) => {
+    const { start, end } = gameTimes(g);
+    return [
+      'BEGIN:VEVENT',
+      `UID:jebi-2027-${g.id}@mthc1867.org`,
+      `DTSTAMP:${now}`,
+      `DTSTART;TZID=America/New_York:${start}`,
+      `DTEND;TZID=America/New_York:${end}`,
+      `SUMMARY:${esc(gameTitle(g))}`,
+      `LOCATION:${esc(`${JEBI.venue}, ${JEBI.address}`)}`,
+      'END:VEVENT',
+    ].join('\r\n');
+  });
+  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//MTHC//JEBI 2027//EN', 'CALSCALE:GREGORIAN', ...events, 'END:VCALENDAR'].join('\r\n');
+};
 
 // ── Sponsorship tiers (from JEBI Sponsor Letter V6) ──────────────────────────
 export interface Tier {
