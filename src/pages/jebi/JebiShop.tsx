@@ -1,49 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Backpack,
-  BadgeCheck,
-  Coffee,
-  Crown,
-  CupSoda,
-  KeyRound,
-  Lock,
-  Medal,
-  Package,
-  Shirt,
-  Unlock,
-  type LucideIcon,
-} from 'lucide-react';
+import { BadgeCheck, ChevronRight, KeyRound, Lock, Medal, Unlock } from 'lucide-react';
 import { JebiHero, SectionHeader } from './components';
 import { PHOTOS } from '../../lib/photos';
 import usePageTitle from './usePageTitle';
 import { jebiPath } from '../../lib/siteMode';
-
-// ── Types from GET /api/jebi/shop/catalog (no quantities — those stay on the server) ──
-interface CatalogItem {
-  id: string;
-  name: string;
-  details: string;
-  price: number;
-}
-interface CatalogTier {
-  tier: 1 | 2 | 3;
-  name: string;
-  sponsors: string[];
-  individuals: string;
-  items: CatalogItem[];
-  total: number;
-}
-
-const ICONS: Record<string, LucideIcon> = {
-  bookbag: Backpack,
-  cap: Crown,
-  tumbler: CupSoda,
-  mug: Coffee,
-  'package-1': Package,
-  'package-2': Package,
-};
-const iconFor = (id: string) => ICONS[id] ?? Shirt;
+import { JEBI } from './data';
+import { ItemImage, TIER_IMAGES, money, readUnlocked, saveUnlocked, useCatalog } from './shopShared';
 
 const TIER_STYLE: Record<1 | 2 | 3, { band: string; chip: string; label: string }> = {
   1: { band: 'from-ink via-jebi-dark to-jebi', chip: 'bg-gold text-ink', label: 'Premium' },
@@ -51,36 +14,20 @@ const TIER_STYLE: Record<1 | 2 | 3, { band: string; chip: string; label: string 
   3: { band: 'from-jebi to-maroon-600', chip: 'bg-white/90 text-jebi', label: 'Accessories' },
 };
 
-const money = (n: number) => `$${n.toLocaleString('en-US')}`;
-const STORAGE_KEY = 'jebi-shop-unlocked';
-
-function readUnlocked(): number[] {
-  try {
-    const v = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '[]');
-    return Array.isArray(v) ? v.filter((n) => [1, 2, 3].includes(n)) : [];
-  } catch {
-    return [];
-  }
-}
-
 export default function JebiShop() {
   usePageTitle('Shop');
-  const [tiers, setTiers] = useState<CatalogTier[] | null>(null);
-  const [loadError, setLoadError] = useState(false);
+  const { tiers, error: loadError } = useCatalog();
   const [filter, setFilter] = useState<'all' | 1 | 2 | 3>('all');
   const [unlocked, setUnlocked] = useState<number[]>(readUnlocked);
   const [code, setCode] = useState('');
   const [status, setStatus] = useState<{ kind: 'idle' | 'checking' | 'ok' | 'error'; message?: string }>({ kind: 'idle' });
 
+  // Arriving from an item page with #access or #tier-N: scroll there once the list renders
   useEffect(() => {
-    fetch('/api/jebi/shop/catalog')
-      .then((r) => {
-        if (!r.ok) throw new Error(String(r.status));
-        return r.json();
-      })
-      .then((d) => setTiers(d.tiers))
-      .catch(() => setLoadError(true));
-  }, []);
+    const id = window.location.hash.slice(1);
+    if (!id || !tiers) return;
+    requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'start' }));
+  }, [tiers]);
 
   // A link like /shop?code=JEBI-XXXX unlocks automatically (handy in sponsor emails)
   useEffect(() => {
@@ -112,11 +59,7 @@ export default function JebiShop() {
       }
       const next = Array.from(new Set([...readUnlocked(), ...d.unlocked])).sort();
       setUnlocked(next);
-      try {
-        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        /* storage unavailable — unlock still works for this visit */
-      }
+      saveUnlocked(next);
       setCode('');
       setStatus({
         kind: 'ok',
@@ -256,8 +199,26 @@ export default function JebiShop() {
             const style = TIER_STYLE[t.tier];
             return (
               <article id={`tier-${t.tier}`} key={t.tier} className="scroll-mt-28 rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 shadow-sm">
+                {/* Tier banner — collection photo, or a branded banner until one is supplied */}
+                <div className={`relative h-56 md:h-72 overflow-hidden bg-gradient-to-r ${style.band}`}>
+                  {TIER_IMAGES[t.tier] ? (
+                    <img
+                      src={TIER_IMAGES[t.tier]!}
+                      alt={`${t.name} collection`}
+                      style={{ objectPosition: 'center 22%' }}
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-end pr-8 md:pr-16">
+                      <div className="absolute inset-0 opacity-[0.07] bg-[radial-gradient(circle_at_center,white_1px,transparent_1px)] [background-size:16px_16px]" />
+                      <img src={JEBI.logo} alt="" className="relative h-[85%] w-auto drop-shadow-2xl" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                </div>
+
                 {/* Tier header */}
-                <div className={`bg-gradient-to-r ${style.band} text-white px-6 md:px-8 py-6 flex flex-col lg:flex-row lg:items-center gap-5`}>
+                <div className={`bg-gradient-to-r ${style.band} text-white px-6 md:px-8 py-6 flex flex-col lg:flex-row lg:items-center gap-5 -mt-px`}>
                   <div className="flex items-center gap-4 flex-1">
                     <span className={`rounded-xl px-3 py-2 text-xs font-bold uppercase tracking-[0.2em] ${style.chip}`}>Tier {t.tier}</span>
                     <div>
@@ -284,16 +245,21 @@ export default function JebiShop() {
                 {/* Items */}
                 <ul className="divide-y divide-gray-100">
                   {t.items.map((item) => {
-                    const Icon = iconFor(item.id);
+                    const href = jebiPath(`/shop/${item.id}`);
                     return (
-                      <li key={item.id} className="px-6 md:px-8 py-4 grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto] items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-jebi/5 flex items-center justify-center">
-                          <Icon className="w-6 h-6 text-jebi" aria-hidden="true" />
-                        </div>
-                        <div>
-                          <p className="font-display uppercase text-xl font-bold text-ink leading-none">{item.name}</p>
+                      <li key={item.id} className="group px-6 md:px-8 py-4 grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto] items-center gap-4 hover:bg-cream/60 transition-colors">
+                        <Link to={href} className="block w-20 h-20 rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-sm" tabIndex={-1} aria-hidden="true">
+                          <ItemImage item={item} size="sm" className="w-full h-full group-hover:scale-105 transition-transform duration-300" />
+                        </Link>
+                        <Link to={href} className="min-w-0">
+                          <p className="font-display uppercase text-xl font-bold text-ink leading-none group-hover:text-jebi transition-colors">
+                            {item.name}
+                          </p>
                           {item.details && <p className="mt-1 text-sm text-gray-500">{item.details}</p>}
-                        </div>
+                          <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-jebi">
+                            View item <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
+                          </span>
+                        </Link>
                         <p className="font-display text-2xl font-bold text-jebi text-right">{money(item.price)}</p>
                         <div className="col-span-3 md:col-span-1 md:w-56 flex md:justify-end whitespace-nowrap">
                           {open ? (
