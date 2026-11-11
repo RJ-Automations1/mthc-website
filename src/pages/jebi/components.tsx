@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
-import { ExternalLink, Radio, BarChart3, CalendarDays, MapPin } from 'lucide-react';
-import { JEBI, JEBI_NAV, TEAMS, type Game, type Team } from './data';
+import { ExternalLink, Radio, BarChart3, CalendarDays, CalendarPlus, MapPin } from 'lucide-react';
+import { JEBI, JEBI_NAV, TEAMS, googleCalendarUrl, type Game, type Team } from './data';
 import type { Photo } from '../../lib/photos';
 import { IS_JEBI_SITE, isExternalUrl as isExternal, jebiPath } from '../../lib/siteMode';
 
@@ -277,6 +277,22 @@ export function GameCard({ game, dayLabel }: { game: Game; dayLabel?: string }) 
           </>
         )}
       </div>
+      {game.status !== 'final' && game.status !== 'canceled' && (
+        <div className="-mt-1 pt-3 border-t border-gray-100 flex items-center justify-between gap-3 text-xs">
+          <span className="flex items-center gap-1.5 text-gray-500 truncate">
+            <MapPin className="w-3.5 h-3.5 text-jebi shrink-0" aria-hidden="true" /> {JEBI.venue}
+          </span>
+          <a
+            href={googleCalendarUrl(game)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 font-bold uppercase tracking-wider text-jebi hover:underline shrink-0"
+          >
+            <CalendarPlus className="w-3.5 h-3.5" aria-hidden="true" /> Add to calendar
+            <span className="sr-only">(opens Google Calendar in a new tab)</span>
+          </a>
+        </div>
+      )}
     </article>
   );
 }

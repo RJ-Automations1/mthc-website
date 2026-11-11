@@ -130,7 +130,7 @@ export default function JebiAbout() {
       <section className="bg-white border-y border-black/5">
         <div className="container-page">
           <SectionHeader eyebrow="Venue guide" title={JEBI.venue}>
-            {JEBI.city}. Full address, directions, and on-site details will be posted here as they are confirmed.
+            {JEBI.address}. Parking, accessibility, and other on-site details will be posted here as they are confirmed.
           </SectionHeader>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="card p-6 flex flex-col gap-3">
