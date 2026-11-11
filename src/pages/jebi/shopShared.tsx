@@ -21,22 +21,39 @@ export interface CatalogTier {
 export const money = (n: number) => `$${n.toLocaleString('en-US')}`;
 
 // ── Pictures ────────────────────────────────────────────────────────────────
-// Keepsake photos are cut from the official merchandise mockup. Apparel shows a
-// branded placeholder until the Thirty Four apparel mockup is supplied — drop
-// the file in /images/jebi/shop/ and add its path here.
+// Keepsake photos are cut from the official merchandise mockup; apparel from the
+// Thirty Four apparel mockup. An item without a photo shows a branded placeholder.
+const P = '/images/jebi/shop';
 export const ITEM_IMAGES: Record<string, string | null> = {
-  mug: '/images/jebi/shop/mug.jpg',
-  tumbler: '/images/jebi/shop/tumbler.jpg',
-  bookbag: '/images/jebi/shop/bookbag.jpg',
-  'package-1': '/images/jebi/shop/package-1.jpg',
-  'package-2': '/images/jebi/shop/package-2.jpg',
+  sweatsuit: `${P}/sweatsuit.jpg`,
+  'quarter-zip': `${P}/quarter-zip.jpg`,
+  polo: `${P}/polo.jpg`,
+  'button-up': `${P}/button-up.jpg`,
+  bookbag: `${P}/bookbag.jpg`,
+  hoodie: `${P}/hoodie.jpg`,
+  crewneck: `${P}/crewneck.jpg`,
+  cap: `${P}/cap.jpg`,
+  tumbler: `${P}/tumbler.jpg`,
+  mug: `${P}/mug.jpg`,
+  'package-1': `${P}/package-1.jpg`,
+  'package-2': `${P}/package-2.jpg`,
+};
+
+/** Full colour line-up shown on an item's page (apparel comes in four colours). */
+export const ITEM_COLORS: Record<string, string> = {
+  sweatsuit: `${P}/sweatsuit-colors.jpg`,
+  'quarter-zip': `${P}/quarter-zip-colors.jpg`,
+  polo: `${P}/polo-colors.jpg`,
+  'button-up': `${P}/button-up-colors.jpg`,
+  hoodie: `${P}/hoodie-colors.jpg`,
+  crewneck: `${P}/crewneck-colors.jpg`,
 };
 
 /** Banner photo across the top of each tier (null = branded banner). */
 export const TIER_IMAGES: Record<1 | 2 | 3, string | null> = {
-  1: null,
-  2: null,
-  3: '/images/jebi/shop/tier-3.jpg',
+  1: `${P}/tier-1.jpg`,
+  2: `${P}/tier-2.jpg`,
+  3: `${P}/tier-3.jpg`,
 };
 
 const ICONS: Record<string, LucideIcon> = {

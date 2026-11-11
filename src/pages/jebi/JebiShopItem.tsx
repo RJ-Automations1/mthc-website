@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, KeyRound, Lock, Medal, Unlock } from 'lucide-react';
 import usePageTitle from './usePageTitle';
 import { jebiPath } from '../../lib/siteMode';
-import { ItemImage, money, readUnlocked, useCatalog } from './shopShared';
+import { ITEM_COLORS, ItemImage, money, readUnlocked, useCatalog } from './shopShared';
 
 /** One merchandise item on its own page: big picture, price, tier and lock state. */
 export default function JebiShopItem() {
@@ -72,8 +72,24 @@ export default function JebiShopItem() {
       {shell(
         <>
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-start">
-            <div className="rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 shadow-xl">
-              <ItemImage item={item} size="lg" className="w-full aspect-square" />
+            <div className="space-y-4">
+              <div className="rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 shadow-xl">
+                <ItemImage item={item} size="lg" className="w-full aspect-square" />
+              </div>
+              {ITEM_COLORS[item.id] && (
+                <figure className="rounded-2xl overflow-hidden bg-white ring-1 ring-black/5 shadow-sm">
+                  <img src={ITEM_COLORS[item.id]} alt={`${item.name} in maroon, gray, white and black`} loading="lazy" className="w-full" />
+                  <figcaption className="px-4 py-3 text-sm text-gray-600 flex items-center gap-3">
+                    <span className="font-semibold text-ink">Available colors</span>
+                    <span className="flex gap-1.5" aria-hidden="true">
+                      {['#6b1426', '#9ca3af', '#ffffff', '#111111'].map((c) => (
+                        <span key={c} className="w-4 h-4 rounded-full ring-1 ring-black/15" style={{ background: c }} />
+                      ))}
+                    </span>
+                    <span>Maroon · Gray · White · Black</span>
+                  </figcaption>
+                </figure>
+              )}
             </div>
 
             <div>
