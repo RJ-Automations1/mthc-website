@@ -1,18 +1,41 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { BadgeCheck, ChevronRight, KeyRound, Lock, Medal, Unlock } from 'lucide-react';
+import { BadgeCheck, ChevronRight, CreditCard, Gift, KeyRound, PackageCheck, ShoppingBag, Unlock } from 'lucide-react';
 import { JebiHero, SectionHeader } from './components';
 import { PHOTOS } from '../../lib/photos';
 import usePageTitle from './usePageTitle';
 import { jebiPath } from '../../lib/siteMode';
 import { JEBI } from './data';
-import { ItemImage, TIER_IMAGES, money, readUnlocked, saveUnlocked, useCatalog } from './shopShared';
+import {
+  ItemImage,
+  LOW_STOCK,
+  TIER_IMAGES,
+  TierWelcome,
+  clearCodeUsed,
+  markCodeUsed,
+  money,
+  priceLabel,
+  readUnlocked,
+  saveCode,
+  saveUnlocked,
+  useCatalog,
+  type CatalogItem,
+} from './shopShared';
 
-const TIER_STYLE: Record<1 | 2 | 3, { band: string; chip: string; label: string }> = {
-  1: { band: 'from-ink via-jebi-dark to-jebi', chip: 'bg-gold text-ink', label: 'Premium' },
-  2: { band: 'from-jebi-dark to-jebi', chip: 'bg-white text-jebi', label: 'Standard' },
-  3: { band: 'from-jebi to-maroon-600', chip: 'bg-white/90 text-jebi', label: 'Accessories' },
+const TIER_STYLE: Record<1 | 2 | 3, { band: string; chip: string }> = {
+  1: { band: 'from-ink via-jebi-dark to-jebi', chip: 'bg-gold text-ink' },
+  2: { band: 'from-jebi-dark to-jebi', chip: 'bg-white text-jebi' },
+  3: { band: 'from-jebi to-maroon-600', chip: 'bg-white/90 text-jebi' },
 };
+
+function StockBadge({ item }: { item: CatalogItem }) {
+  if (item.remaining === null) return null;
+  if (item.remaining <= 0)
+    return <span className="rounded-full bg-gray-900 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white">Sold out</span>;
+  if (item.remaining <= LOW_STOCK)
+    return <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-800">Only {item.remaining} left</span>;
+  return null;
+}
 
 export default function JebiShop() {
   usePageTitle('Shop');
@@ -21,15 +44,25 @@ export default function JebiShop() {
   const [unlocked, setUnlocked] = useState<number[]>(readUnlocked);
   const [code, setCode] = useState('');
   const [status, setStatus] = useState<{ kind: 'idle' | 'checking' | 'ok' | 'error'; message?: string }>({ kind: 'idle' });
+  const [welcome, setWelcome] = useState<{ tier: 1 | 2 | 3; usedRef: string | null } | null>(null);
+  const closeWelcome = useCallback(() => setWelcome(null), []);
+  const chooseItem = useCallback(() => {
+    const t = welcome?.tier;
+    setWelcome(null);
+    if (t) {
+      setFilter('all');
+      requestAnimationFrame(() => document.getElementById(`tier-${t}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
+  }, [welcome]);
 
-  // Arriving from an item page with #access or #tier-N: scroll there once the list renders
+  // Arriving with #access or #tier-N: scroll there once the list renders
   useEffect(() => {
     const id = window.location.hash.slice(1);
     if (!id || !tiers) return;
     requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'start' }));
   }, [tiers]);
 
-  // A link like /shop?code=JEBI-XXXX unlocks automatically (handy in sponsor emails)
+  // A link like /shop?code=JEBI1-XXXX-XXXX unlocks automatically (handy in sponsor emails)
   useEffect(() => {
     const fromLink = new URLSearchParams(window.location.search).get('code');
     if (fromLink) {
@@ -57,15 +90,19 @@ export default function JebiShop() {
         setStatus({ kind: 'error', message: d.message || "That code wasn't recognized." });
         return;
       }
-      const next = Array.from(new Set([...readUnlocked(), ...d.unlocked])).sort();
-      setUnlocked(next);
-      saveUnlocked(next);
+      saveCode(value);
       setCode('');
-      setStatus({
-        kind: 'ok',
-        message: `Code accepted — Tier ${d.tier} collection unlocked${d.unlocked.length > 1 ? ` (plus Tier ${d.unlocked.filter((t: number) => t !== d.tier).join(' & ')})` : ''}.`,
-      });
-      document.getElementById(`tier-${d.tier}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (d.used) {
+        markCodeUsed();
+        setUnlocked([]);
+        setStatus({ kind: 'ok', message: `Tier ${d.tier} code — its free item has already been claimed (order ${d.usedRef}).` });
+      } else {
+        clearCodeUsed();
+        setUnlocked(d.unlocked);
+        saveUnlocked(d.unlocked);
+        setStatus({ kind: 'ok', message: `Tier ${d.tier} code accepted — pick one item and choose "Claim free".` });
+      }
+      setWelcome({ tier: d.tier, usedRef: d.used ? d.usedRef : null });
     } catch {
       setStatus({ kind: 'error', message: 'Could not check the code right now. Please try again.' });
     }
@@ -75,33 +112,34 @@ export default function JebiShop() {
 
   return (
     <>
+      {welcome && <TierWelcome tier={welcome.tier} usedRef={welcome.usedRef} onChoose={chooseItem} onClose={closeWelcome} />}
       <JebiHero
         eyebrow="Shop"
         title="Official JEBI Collection"
-        subtitle="Exclusive Jay Edwards Baseball Invitational merchandise — reserved for our sponsors and donors."
+        subtitle="Commemorative apparel and keepsakes from the inaugural Jay Edwards Baseball Invitational. Quantities are limited."
         image={PHOTOS.jebiShopHero}
       >
         <div className="flex flex-wrap gap-3">
-          <a href="#access" className="btn-gold uppercase tracking-wider text-sm">
-            <KeyRound className="w-4 h-4" /> Enter Access Code
+          <a href="#collection" className="btn-gold uppercase tracking-wider text-sm">
+            <ShoppingBag className="w-4 h-4" /> Shop the collection
           </a>
-          <Link to={jebiPath('/partnerships')} className="btn-ghost-light uppercase tracking-wider text-sm">
-            Get a Tier
-          </Link>
+          <a href="#access" className="btn-ghost-light uppercase tracking-wider text-sm">
+            <KeyRound className="w-4 h-4" /> Sponsor access code
+          </a>
         </div>
       </JebiHero>
 
       {/* How it works */}
       <section className="container-page">
-        <SectionHeader eyebrow="How it works" title="Members-only merchandise">
-          The JEBI collection is available by tier. Support the Invitational, receive your access code, and unlock your
-          tier's collection.
+        <SectionHeader eyebrow="How it works" title="Buy or claim your gear">
+          Anyone can purchase from the collection. Sponsors and donors receive an access code to claim items from their
+          tier free.
         </SectionHeader>
         <ol className="grid md:grid-cols-3 gap-5">
           {[
-            { icon: Medal, title: 'Get your tier', text: 'Become a sponsor or make an individual gift. Your level decides your tier.' },
-            { icon: KeyRound, title: 'Receive your code', text: 'MTHC sends you a personal access code for your tier.' },
-            { icon: Unlock, title: 'Unlock & order', text: 'Enter the code below to unlock your collection. Online ordering opens soon.' },
+            { icon: ShoppingBag, title: 'Pick your item', text: 'Choose an item, style and quantity. You can only order what’s in stock.' },
+            { icon: CreditCard, title: 'Pay securely', text: 'Your order is reserved, then you pay the total on MTHC’s secure Square page.' },
+            { icon: Gift, title: 'Sponsors claim free', text: 'Have an access code? Enter it to claim an item from your tier at no charge.' },
           ].map(({ icon: Icon, title, text }, i) => (
             <li key={title} className="card p-6 flex gap-4 hover:translate-y-0">
               <div className="w-12 h-12 rounded-2xl bg-jebi text-white flex items-center justify-center shrink-0 relative">
@@ -123,10 +161,10 @@ export default function JebiShop() {
       <section id="access" className="scroll-mt-28 bg-ink text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid lg:grid-cols-12 gap-8 items-center">
           <div className="lg:col-span-5">
-            <span className="eyebrow text-gold">Access code</span>
-            <h2 className="mt-3 font-display uppercase text-4xl md:text-5xl font-bold leading-none">Unlock your collection</h2>
+            <span className="eyebrow text-gold">Sponsors & donors</span>
+            <h2 className="mt-3 font-display uppercase text-4xl md:text-5xl font-bold leading-none">Claim with your access code</h2>
             <p className="mt-3 text-white/70">
-              Enter the access code you received after getting your tier. A higher tier also unlocks the tiers below it.
+              Enter the code you received with your sponsorship or gift. A higher tier also covers the tiers below it.
             </p>
           </div>
           <form onSubmit={submit} className="lg:col-span-7">
@@ -138,35 +176,31 @@ export default function JebiShop() {
                 id="access-code"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                placeholder="e.g. JEBI-XXXX-XXXX"
+                placeholder="e.g. JEBI1-XXXX-XXXX"
                 autoComplete="off"
                 autoCapitalize="characters"
                 spellCheck={false}
                 className="input !bg-white/10 !border-white/20 !text-white placeholder:text-white/40 uppercase tracking-widest font-semibold flex-1"
               />
               <button type="submit" disabled={status.kind === 'checking'} className="btn-gold uppercase tracking-wider text-sm disabled:opacity-60">
-                <KeyRound className="w-4 h-4" /> {status.kind === 'checking' ? 'Checking…' : 'Unlock'}
+                <KeyRound className="w-4 h-4" /> {status.kind === 'checking' ? 'Checking…' : 'Apply code'}
               </button>
             </div>
             <div aria-live="polite" className="min-h-[1.5rem] mt-3 text-sm">
               {status.kind === 'ok' && (
                 <p className="flex items-center gap-2 text-gold">
-                  <BadgeCheck className="w-4 h-4" aria-hidden="true" /> {status.message}
+                  <BadgeCheck className="w-4 h-4 shrink-0" aria-hidden="true" /> {status.message}
                 </p>
               )}
               {status.kind === 'error' && <p className="text-red-300">{status.message}</p>}
             </div>
-            {unlocked.length > 0 && (
-              <p className="text-xs text-white/50">
-                Unlocked on this device: {unlocked.map((t) => `Tier ${t}`).join(', ')}
-              </p>
-            )}
+            {unlocked.length > 0 && <p className="text-xs text-white/50">Code applied on this device: claim Tier {unlocked.join(', ')} items free</p>}
           </form>
         </div>
       </section>
 
       {/* Tiers */}
-      <section className="container-page">
+      <section id="collection" className="container-page scroll-mt-24">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
           <SectionHeader eyebrow="The collection" title="Shop by tier" />
           <div role="group" aria-label="Filter by tier" className="flex flex-wrap gap-2 md:mb-10">
@@ -195,26 +229,25 @@ export default function JebiShop() {
 
         <div className="space-y-10">
           {shown.map((t) => {
-            const open = unlocked.includes(t.tier);
+            const canClaim = unlocked.includes(t.tier);
             const style = TIER_STYLE[t.tier];
             return (
               <article id={`tier-${t.tier}`} key={t.tier} className="scroll-mt-28 rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 shadow-sm">
-                {/* Tier banner — collection photo, or a branded banner until one is supplied */}
-                <div className={`relative h-56 md:h-72 overflow-hidden bg-gradient-to-r ${style.band}`}>
+                {/* Tier banner */}
+                <div className={`relative h-60 md:h-96 overflow-hidden bg-gradient-to-r ${style.band}`}>
                   {TIER_IMAGES[t.tier] ? (
                     <img
                       src={TIER_IMAGES[t.tier]!}
                       alt={`${t.name} collection`}
-                      style={{ objectPosition: 'center 22%' }}
+                      style={{ objectPosition: t.tier === 3 ? 'center 45%' : 'center 30%' }}
                       className="absolute inset-0 h-full w-full object-cover"
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-end pr-8 md:pr-16">
-                      <div className="absolute inset-0 opacity-[0.07] bg-[radial-gradient(circle_at_center,white_1px,transparent_1px)] [background-size:16px_16px]" />
                       <img src={JEBI.logo} alt="" className="relative h-[85%] w-auto drop-shadow-2xl" />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 </div>
 
                 {/* Tier header */}
@@ -224,58 +257,64 @@ export default function JebiShop() {
                     <div>
                       <h3 className="font-display uppercase text-3xl md:text-4xl font-bold leading-none">{t.name}</h3>
                       <p className="mt-1.5 text-sm text-white/75">
-                        Unlocked by <strong className="text-white">{t.sponsors.join(' & ')}</strong> sponsors · individual gifts of{' '}
+                        Free with a code for <strong className="text-white">{t.sponsors.join(' & ')}</strong> sponsors · individual gifts of{' '}
                         <strong className="text-white">{t.individuals}</strong>
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {open ? (
-                      <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-bold">
-                        <Unlock className="w-4 h-4 text-gold" aria-hidden="true" /> Unlocked
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-2 rounded-full bg-black/25 px-4 py-2 text-sm font-bold">
-                        <Lock className="w-4 h-4" aria-hidden="true" /> Access code required
-                      </span>
-                    )}
-                  </div>
+                  {canClaim && (
+                    <span className="inline-flex items-center gap-2 self-start lg:self-auto rounded-full bg-white/15 px-4 py-2 text-sm font-bold">
+                      <Unlock className="w-4 h-4 text-gold" aria-hidden="true" /> Pick 1 free item
+                    </span>
+                  )}
                 </div>
 
                 {/* Items */}
                 <ul className="divide-y divide-gray-100">
                   {t.items.map((item) => {
                     const href = jebiPath(`/shop/${item.id}`);
+                    const soldOut = item.remaining !== null && item.remaining <= 0;
                     return (
-                      <li key={item.id} className="group px-6 md:px-8 py-4 grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto] items-center gap-4 hover:bg-cream/60 transition-colors">
-                        <Link to={href} className="block w-20 h-20 rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-sm" tabIndex={-1} aria-hidden="true">
-                          <ItemImage item={item} size="sm" className="w-full h-full group-hover:scale-105 transition-transform duration-300" />
+                      <li
+                        key={item.id}
+                        className={`group px-6 md:px-8 py-4 grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto] items-center gap-4 hover:bg-cream/60 transition-colors ${soldOut ? 'opacity-70' : ''}`}
+                      >
+                        <Link to={href} className="relative block w-20 h-20 rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-sm" tabIndex={-1} aria-hidden="true">
+                          <ItemImage item={item} size="sm" className={`w-full h-full group-hover:scale-105 transition-transform duration-300 ${soldOut ? 'grayscale' : ''}`} />
                         </Link>
                         <Link to={href} className="min-w-0">
-                          <p className="font-display uppercase text-xl font-bold text-ink leading-none group-hover:text-jebi transition-colors">
-                            {item.name}
+                          <p className="flex flex-wrap items-center gap-2">
+                            <span className="font-display uppercase text-xl font-bold text-ink leading-none group-hover:text-jebi transition-colors">{item.name}</span>
+                            <StockBadge item={item} />
                           </p>
                           {item.details && <p className="mt-1 text-sm text-gray-500">{item.details}</p>}
                           <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-jebi">
                             View item <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
                           </span>
                         </Link>
-                        <p className="font-display text-2xl font-bold text-jebi text-right">{money(item.price)}</p>
-                        <div className="col-span-3 md:col-span-1 md:w-56 flex md:justify-end whitespace-nowrap">
-                          {open ? (
-                            <span
-                              className="inline-flex items-center gap-2 rounded-full bg-gold/15 px-4 py-2 text-xs font-bold uppercase tracking-wider text-ink"
-                              title="Online ordering opens soon"
-                            >
-                              <Unlock className="w-3.5 h-3.5 text-jebi" aria-hidden="true" /> Ordering opens soon
+                        <p className="font-display text-2xl font-bold text-jebi text-right whitespace-nowrap">{priceLabel(item)}</p>
+                        <div className="col-span-3 md:col-span-1 md:w-60 flex gap-2 md:justify-end whitespace-nowrap">
+                          {soldOut ? (
+                            <span className="inline-flex items-center rounded-full bg-gray-100 px-4 py-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+                              Sold out
                             </span>
                           ) : (
-                            <a
-                              href="#access"
-                              className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-xs font-bold uppercase tracking-wider text-gray-500 hover:bg-gray-200"
-                            >
-                              <Lock className="w-3.5 h-3.5" aria-hidden="true" /> Access code
-                            </a>
+                            <>
+                              {canClaim && (
+                                <Link
+                                  to={`${href}#claim`}
+                                  className="inline-flex items-center gap-1.5 rounded-full bg-gold px-4 py-2 text-xs font-bold uppercase tracking-wider text-ink hover:bg-gold-light"
+                                >
+                                  <Gift className="w-3.5 h-3.5" aria-hidden="true" /> Claim free
+                                </Link>
+                              )}
+                              <Link
+                                to={href}
+                                className="inline-flex items-center gap-1.5 rounded-full bg-jebi px-4 py-2 text-xs font-bold uppercase tracking-wider text-white hover:bg-jebi-dark"
+                              >
+                                <ShoppingBag className="w-3.5 h-3.5" aria-hidden="true" /> Buy
+                              </Link>
+                            </>
                           )}
                         </div>
                       </li>
@@ -289,47 +328,18 @@ export default function JebiShop() {
                     <span className="font-display uppercase text-lg font-bold text-ink mr-2">Tier {t.tier} subtotal</span>
                     one of every item in this collection
                   </p>
-                  <div className="flex items-center gap-4">
-                    <p className="font-display text-3xl font-bold text-ink">{money(t.total)}</p>
-                    {!open && (
-                      <Link to={jebiPath('/partnerships')} className="btn-primary !py-2 !px-4 text-xs uppercase tracking-wider">
-                        Get this tier
-                      </Link>
-                    )}
-                  </div>
+                  <p className="font-display text-3xl font-bold text-ink">{money(t.total)}</p>
                 </div>
               </article>
             );
           })}
         </div>
 
-        <p className="mt-8 text-xs text-gray-500 max-w-3xl">
-          Prices are per item. Merchandise is produced by Thirty Four (3RTY4.com); quantities are limited. Product images and
-          final colors may vary.
+        <p className="mt-8 flex items-start gap-2 text-xs text-gray-500 max-w-3xl">
+          <PackageCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
+          Quantities are limited — once an item's stock is purchased or claimed it is sold out. Merchandise is produced by
+          Thirty Four (3RTY4.com). Product images are mockups; final colors may vary.
         </p>
-      </section>
-
-      {/* Mockup */}
-      <section className="bg-white border-y border-black/5">
-        <div className="container-page grid lg:grid-cols-2 gap-10 items-center">
-          <figure>
-            <img
-              src={PHOTOS.jebiMerch.src}
-              alt="Jay Edwards Baseball Invitational branded keepsakes: mugs, tumbler, keychains, buttons, pens, lanyards, wristbands and backpack"
-              className="rounded-3xl w-full shadow-xl ring-1 ring-black/5"
-            />
-            <figcaption className="mt-3 text-xs text-gray-500">Product mockup — final products, colors, and availability may vary.</figcaption>
-          </figure>
-          <div>
-            <SectionHeader eyebrow="Commemorative gifts" title="Wear the legacy">
-              Maroon, gray, black, and white apparel alongside branded keepsakes — the perfect way to remember the
-              inaugural Invitational.
-            </SectionHeader>
-            <Link to={jebiPath('/partnerships')} className="btn-primary -mt-4 uppercase tracking-wider text-sm">
-              See sponsorship levels
-            </Link>
-          </div>
-        </div>
       </section>
     </>
   );
