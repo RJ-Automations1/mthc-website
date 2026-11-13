@@ -48,6 +48,8 @@ async function ensureTable() {
          );
          CREATE INDEX IF NOT EXISTS jebi_shop_orders_item ON jebi_shop_orders (item_id);
          ALTER TABLE jebi_shop_orders ADD COLUMN IF NOT EXISTS access_code VARCHAR(40);
+         ALTER TABLE jebi_shop_orders ADD COLUMN IF NOT EXISTS square_order_id VARCHAR(64);
+         ALTER TABLE jebi_shop_orders ADD COLUMN IF NOT EXISTS pay_url TEXT;
          CREATE TABLE IF NOT EXISTS jebi_access_codes (
            code VARCHAR(40) PRIMARY KEY,
            tier INTEGER NOT NULL CHECK (tier BETWEEN 1 AND 3),
@@ -218,6 +220,22 @@ export async function listOrders() {
      FROM jebi_shop_orders ORDER BY created_at DESC LIMIT 500`,
   );
   return rows;
+}
+
+export async function saveCheckout(ref: string, squareOrderId: string | null, payUrl: string) {
+  await ensureTable();
+  await getPool()!.query(`UPDATE jebi_shop_orders SET square_order_id = $2, pay_url = $3 WHERE ref = $1`, [ref, squareOrderId, payUrl]);
+}
+
+export async function getOrder(ref: string) {
+  await ensureTable();
+  const { rows } = await getPool()!.query(
+    `SELECT ref, item_id, option_id, qty, total, kind, status, square_order_id, pay_url FROM jebi_shop_orders WHERE ref = $1`,
+    [ref],
+  );
+  return (rows[0] as
+    | { ref: string; item_id: string; option_id: string | null; qty: number; total: number; kind: OrderKind; status: OrderStatus; square_order_id: string | null; pay_url: string | null }
+    | undefined) ?? null;
 }
 
 export async function setOrderStatus(ref: string, status: OrderStatus) {

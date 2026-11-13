@@ -87,6 +87,7 @@ export default function JebiShopItem() {
   const [buyer, setBuyer] = useState({ name: '', email: '', phone: '' });
   const [code, setCode] = useState(readCode);
   const [codeUsed, setCodeUsed] = useState(readCodeUsed);
+  const [redirecting, setRedirecting] = useState<number | null>(null);
   const [busy, setBusy] = useState<'buy' | 'claim' | null>(null);
   const [msg, setMsg] = useState<{ where: 'buy' | 'claim'; text: string } | null>(null);
   const [done, setDone] = useState<(OrderResult & { kind: 'purchase' | 'claim' }) | null>(null);
@@ -123,6 +124,12 @@ export default function JebiShopItem() {
       if (!r.ok || !d.ok) {
         setMsg({ where: kind === 'purchase' ? 'buy' : 'claim', text: d.message || 'Something went wrong. Please try again.' });
         if (r.status === 409) reload();
+        return;
+      }
+      if (kind === 'purchase' && d.exactAmount && d.payUrl) {
+        // Straight to Square's checkout page, already filled in with this item and total
+        setRedirecting(d.total);
+        window.location.assign(d.payUrl);
         return;
       }
       if (kind === 'claim') {
@@ -199,6 +206,18 @@ export default function JebiShopItem() {
   const unitPrice = item.options?.find((o) => o.id === optionId)?.price ?? item.price;
   const covers = unlocked.includes(tier.tier);
   const others = tier.items.filter((i) => i.id !== item.id);
+
+  if (redirecting !== null) {
+    return shell(
+      <div className="max-w-xl mx-auto card p-10 hover:translate-y-0 text-center" role="status">
+        <CreditCard className="w-12 h-12 text-jebi mx-auto animate-pulse" aria-hidden="true" />
+        <h1 className="mt-4 font-display uppercase text-4xl font-bold text-ink leading-none">Taking you to Square…</h1>
+        <p className="mt-3 text-gray-600">
+          Your items are held. Complete your <strong>{money(redirecting)}</strong> payment on MTHC's secure Square checkout.
+        </p>
+      </div>,
+    );
+  }
 
   // ── Confirmation after buying / claiming ──
   if (done) {
@@ -324,7 +343,9 @@ export default function JebiShopItem() {
                   </button>
                 </div>
                 {msg?.where === 'buy' && <p role="alert" className="text-sm text-red-600">{msg.text}</p>}
-                <p className="text-xs text-gray-500">You'll pay on MTHC's secure Square page. Your items are held while you complete payment.</p>
+                <p className="text-xs text-gray-500">
+                  You'll pay {money(unitPrice * qty)} on MTHC's secure Square checkout. Your purchase supports the Invitational and Morehouse Baseball.
+                </p>
               </form>
 
               {/* Claim */}

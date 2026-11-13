@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import crypto from 'crypto';
 import { publicCatalog, findItem, SHOP_TIERS } from '../jebi/shopCatalog';
+import { createCheckout, isPaid, squareEnabled } from '../jebi/squareCheckout';
 import {
   createCode,
+  getOrder,
+  saveCheckout,
   listCodes,
   listOrders,
   lookupCode,
@@ -131,7 +134,23 @@ async function handleOrder(req: any, res: any, kind: 'purchase' | 'claim') {
 
   try {
     const order = await placeOrder({ itemId: found.item.id, optionId: req.body?.optionId || null, qty, kind, tierCode, accessCode, ...buyer });
-    res.json({ ok: true, ...order, payUrl: kind === 'purchase' ? PAY_URL : null });
+    if (kind === 'claim') return res.json({ ok: true, ...order, payUrl: null, exactAmount: false });
+
+    // Purchase: a Square checkout page pre-filled with this exact item and total
+    let payUrl = PAY_URL;
+    let exactAmount = false;
+    if (squareEnabled()) {
+      try {
+        const title = `JEBI ${order.item}${order.option ? ` — ${order.option}` : ''} × ${order.qty}`;
+        const checkout = await createCheckout({ ref: order.ref, title, totalDollars: order.total, email: buyer.email, returnUrl: `${siteOrigin(req)}/shop/order/${order.ref}` });
+        await saveCheckout(order.ref, checkout.squareOrderId, checkout.url);
+        payUrl = checkout.url;
+        exactAmount = true;
+      } catch (e) {
+        console.error('JEBI Square checkout failed — falling back to the static Square link', e);
+      }
+    }
+    res.json({ ok: true, ...order, payUrl, exactAmount });
   } catch (e) {
     if (e instanceof StockError) return res.status(409).json({ ok: false, message: e.message });
     console.error('JEBI shop order failed', e);
@@ -141,6 +160,33 @@ async function handleOrder(req: any, res: any, kind: 'purchase' | 'claim') {
 
 router.post('/order', (req, res) => handleOrder(req, res, 'purchase'));
 router.post('/claim', (req, res) => handleOrder(req, res, 'claim'));
+
+const siteOrigin = (req: any) => {
+  const proto = String(req.headers['x-forwarded-proto'] || req.protocol || 'https').split(',')[0];
+  return `${proto}://${req.get('host')}`;
+};
+
+/** Checks Square and marks a purchase paid once Square shows it paid. */
+async function syncPayment(ref: string) {
+  const o = await getOrder(ref);
+  if (!o) return null;
+  if (o.kind === 'purchase' && o.status === 'pending' && o.square_order_id && squareEnabled()) {
+    if (await isPaid(o.square_order_id, o.total).catch(() => false)) {
+      await setOrderStatus(ref, 'paid');
+      o.status = 'paid';
+    }
+  }
+  return o;
+}
+
+/** Buyer's return page after Square: { status, paid, payUrl } for one order. */
+router.get('/orders/:ref/payment', async (req, res) => {
+  if (throttled(`pay:${ipOf(req)}`, 60, 10 * 60 * 1000)) return res.status(429).json({ message: 'Too many requests.' });
+  if (!storeAvailable()) return res.status(503).json({ message: 'Orders unavailable.' });
+  const o = await syncPayment(String(req.params.ref).toUpperCase()).catch(() => null);
+  if (!o) return res.status(404).json({ message: 'Order not found.' });
+  res.json({ ref: o.ref, status: o.status, paid: o.status === 'paid' || o.status === 'fulfilled', total: o.total, qty: o.qty, itemId: o.item_id, payUrl: o.pay_url });
+});
 
 // ── Admin ────────────────────────────────────────────────────────────────────
 function requireAdmin(req: any, res: any) {
@@ -162,11 +208,24 @@ router.get('/inventory', async (req, res) => {
     const report = await stockReport();
     const orders = storeAvailable() ? await listOrders() : [];
     const codes = storeAvailable() ? await listCodes() : [];
-    res.json({ ...report, orders, codes });
+    res.json({ ...report, orders, codes, squareConnected: squareEnabled() });
   } catch (e) {
     console.error('JEBI inventory failed', e);
     res.status(500).json({ message: 'Could not load inventory.' });
   }
+});
+
+/** Checks Square for every unpaid purchase and marks the paid ones. */
+router.post('/orders/sync', async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  if (!squareEnabled()) return res.status(503).json({ message: 'Square is not connected (SQUARE_ACCESS_TOKEN / SQUARE_LOCATION_ID).' });
+  const pending = (await listOrders()).filter((o: any) => o.kind === 'purchase' && o.status === 'pending');
+  let marked = 0;
+  for (const o of pending) {
+    const r = await syncPayment(o.ref).catch(() => null);
+    if (r?.status === 'paid') marked++;
+  }
+  res.json({ ok: true, checked: pending.length, marked });
 });
 
 /** Creates a personal one-item access code for a sponsor: { tier, label } */

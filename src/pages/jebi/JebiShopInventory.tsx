@@ -53,6 +53,7 @@ interface Inventory {
   tiers: InvTier[];
   totalCost: number;
   ordersEnabled: boolean;
+  squareConnected: boolean;
   orders: Order[];
   codes: AccessCode[];
 }
@@ -118,6 +119,15 @@ export default function JebiShopInventory() {
     load();
   };
 
+  const [syncMsg, setSyncMsg] = useState('');
+  const syncSquare = async () => {
+    setSyncMsg('Checking Square…');
+    const r = await fetch('/api/jebi/shop/orders/sync', { method: 'POST', headers: { 'x-admin-key': key } }).catch(() => null);
+    const d = r ? await r.json().catch(() => ({})) : {};
+    setSyncMsg(r?.ok ? `Checked ${d.checked} unpaid order(s) — ${d.marked} now marked paid.` : d.message || 'Could not reach Square.');
+    load();
+  };
+
   const [newCode, setNewCode] = useState({ label: '', tier: '1' });
   const [created, setCreated] = useState<{ code: string; tier: number; label: string } | null>(null);
   const [codeErr, setCodeErr] = useState('');
@@ -180,6 +190,17 @@ export default function JebiShopInventory() {
             {!data.ordersEnabled && (
               <p className="text-sm bg-black/25 rounded-xl px-3 py-2">Ordering is off — the database isn't connected (DATABASE_URL).</p>
             )}
+            <p className="text-sm bg-black/25 rounded-xl px-3 py-2">
+              {data.squareConnected
+                ? 'Square connected — buyers get exact-amount checkout and payments are confirmed automatically.'
+                : 'Square not connected — buyers use the static donation link; mark payments by hand.'}
+            </p>
+            {data.squareConnected && (
+              <button type="button" onClick={syncSquare} className="btn-gold text-sm">
+                Check Square payments
+              </button>
+            )}
+            {syncMsg && <p className="text-sm text-gold">{syncMsg}</p>}
             <button type="button" onClick={() => load()} className="ml-auto btn-ghost-light text-sm">
               <RefreshCw className="w-4 h-4" /> Refresh
             </button>
