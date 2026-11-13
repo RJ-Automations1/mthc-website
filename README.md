@@ -239,8 +239,8 @@ site — the same pattern as JVO Events → JVO Weddings. Two Render services, o
 
 | Render service | Build-time env | What it serves |
 |---|---|---|
-| `mthc-website` | `VITE_JEBI_URL=https://jebi-tjbj.onrender.com` | MTHC site; the JEBI logo icon in the nav/footer links out to the JEBI site |
-| `jebi` | `VITE_SITE_MODE=jebi`, `VITE_MTHC_URL=https://mthc1867.org` | JEBI-only site at the root: `/`, `/about`, `/teams`, `/schedule`, `/tickets`, `/partnerships`, `/media`, `/shop`, `/contact` |
+| `mthc-website` | `VITE_JEBI_URL=https://supportjebi.org` | MTHC site; the JEBI logo icon in the nav/footer links out to the JEBI site |
+| `jebi` | `VITE_SITE_MODE=jebi`, `VITE_MTHC_URL=https://mthc1867.org` | JEBI-only site at the root (custom domain **supportjebi.org**, DNS at Namecheap: A `@` → 216.24.57.1, CNAME `www` → jebi-tjbj.onrender.com): `/`, `/about`, `/teams`, `/schedule`, `/tickets`, `/partnerships`, `/media`, `/shop`, `/contact` |
 
 - `VITE_*` values are baked in at **build time** — change them on Render, then redeploy.
 - Without `VITE_JEBI_URL`, the MTHC icon falls back to the in-app `/jebi` pages.

@@ -261,7 +261,7 @@ export const googleCalendarUrl = (g: Game) => {
     dates: `${start}/${end}`,
     ctz: 'America/New_York',
     location: `${JEBI.venue}, ${JEBI.address}`,
-    details: `Inaugural Jay Edwards Baseball Invitational. Schedule: https://jebi-tjbj.onrender.com/schedule`,
+    details: `Inaugural Jay Edwards Baseball Invitational. Schedule: https://supportjebi.org/schedule`,
   });
   return `https://calendar.google.com/calendar/render?${q.toString()}`;
 };
