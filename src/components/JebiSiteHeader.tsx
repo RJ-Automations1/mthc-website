@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { Menu, X, ArrowUpRight } from 'lucide-react';
-import { JEBI, JEBI_NAV } from '../pages/jebi/data';
+import { Menu, X, ArrowUpRight, Heart, ShoppingBag } from 'lucide-react';
+import { JEBI, JEBI_NAV, jebiShopPath } from '../pages/jebi/data';
 import { MTHC_SITE_URL, PHOTOS_MTHC_LOGO } from './jebiSiteShared';
 
 /**
@@ -32,6 +32,22 @@ export default function JebiSiteHeader() {
     </a>
   );
 
+  // Shop gets its own "Shop Merch" button, so it's left out of the text links.
+  const navLinks = JEBI_NAV.filter((item) => item.href !== jebiShopPath);
+
+  const DonateLink = ({ className }: { className: string }) =>
+    JEBI.donateUrl ? (
+      <a href={JEBI.donateUrl} className={className}>
+        <Heart className="w-3.5 h-3.5" aria-hidden="true" /> Donate
+      </a>
+    ) : null;
+
+  const MerchLink = ({ className }: { className: string }) => (
+    <Link to={jebiShopPath} className={className}>
+      <ShoppingBag className="w-3.5 h-3.5" aria-hidden="true" /> Shop Merch
+    </Link>
+  );
+
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
@@ -51,7 +67,7 @@ export default function JebiSiteHeader() {
           </Link>
 
           <div className="hidden xl:flex items-center gap-0.5">
-            {JEBI_NAV.map((item) => (
+            {navLinks.map((item) => (
               <NavLink
                 key={item.href}
                 to={item.href}
@@ -65,7 +81,9 @@ export default function JebiSiteHeader() {
                 {item.name}
               </NavLink>
             ))}
-            <MthcLink className="ml-4 inline-flex items-center gap-2 rounded-full border border-gold/60 px-4 py-2 text-xs font-bold uppercase tracking-wider text-gold hover:bg-gold hover:text-ink transition" />
+            <MerchLink className="ml-3 inline-flex items-center gap-1.5 rounded-full border border-white/40 px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-white hover:bg-white hover:text-ink transition" />
+            <DonateLink className="ml-2 inline-flex items-center gap-1.5 rounded-full bg-gold px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-ink hover:bg-white transition" />
+            <MthcLink className="ml-2 inline-flex items-center gap-2 rounded-full border border-gold/60 px-4 py-2 text-xs font-bold uppercase tracking-wider text-gold hover:bg-gold hover:text-ink transition" />
           </div>
 
           <button
@@ -81,7 +99,7 @@ export default function JebiSiteHeader() {
         {open && (
           <div className="xl:hidden pb-6 animate-fade-up max-h-[calc(100vh-5rem)] overflow-y-auto">
             <div className="flex flex-col border-t border-white/10 pt-4">
-              {JEBI_NAV.map((item) => (
+              {navLinks.map((item) => (
                 <NavLink
                   key={item.href}
                   to={item.href}
@@ -95,7 +113,11 @@ export default function JebiSiteHeader() {
                   {item.name}
                 </NavLink>
               ))}
-              <MthcLink className="mt-4 inline-flex items-center justify-center gap-2 rounded-full border border-gold/60 px-6 py-3 font-bold uppercase tracking-wider text-gold" />
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <MerchLink className="inline-flex items-center justify-center gap-2 rounded-full border border-white/40 px-4 py-3 font-bold uppercase tracking-wider text-white" />
+                <DonateLink className="inline-flex items-center justify-center gap-2 rounded-full bg-gold px-4 py-3 font-bold uppercase tracking-wider text-ink" />
+              </div>
+              <MthcLink className="mt-3 inline-flex items-center justify-center gap-2 rounded-full border border-gold/60 px-6 py-3 font-bold uppercase tracking-wider text-gold" />
             </div>
           </div>
         )}
