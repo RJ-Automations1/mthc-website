@@ -61,6 +61,8 @@ export const CONTACTS = {
   },
 };
 
+export const jebiShopPath = jebiPath('/shop');
+
 export const JEBI_NAV = [
   { name: 'Home', href: jebiPath(), desc: 'Event overview' },
   { name: 'About', href: jebiPath('/about'), desc: 'Mission & the Jay Edwards story' },

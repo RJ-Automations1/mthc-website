@@ -48,10 +48,14 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 async function start() {
-  try {
-    await initDb();
-  } catch (err) {
-    console.error('⚠️  Database init failed (site will still serve):', err);
+  // The standalone JEBI site shares MTHC's database only for shop orders — it
+  // never runs MTHC's schema setup or seeding.
+  if ((process.env.VITE_SITE_MODE || '').toLowerCase() !== 'jebi') {
+    try {
+      await initDb();
+    } catch (err) {
+      console.error('⚠️  Database init failed (site will still serve):', err);
+    }
   }
   app.listen(PORT, () => {
     console.log(`🏟️  MTHC Server running on port ${PORT}`);

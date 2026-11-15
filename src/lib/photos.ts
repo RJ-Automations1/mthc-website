@@ -34,7 +34,8 @@ export const PHOTOS = {
   jebiTicketsHero: { src: '/images/senior-day.jpg', position: 'center 55%' },
   jebiPartnersHero: { src: '/images/jebi/photos/jebi-photo-6.jpg', position: 'center 45%' },
   jebiMediaHero: { src: '/images/jebi/photos/jebi-photo-5.jpg', position: 'center 4%' },
-  jebiShopHero: { src: '/images/jebi/jebi-merchandise.jpg', position: 'center 55%' },
+  // Taller banner + no slow zoom, so more of the merchandise shows
+  jebiShopHero: { src: '/images/jebi/jebi-merchandise.jpg', position: 'center 50%', tall: true },
   jebiContactHero: { src: '/images/team-2026.jpg', position: 'center 28%' },
   jebiMerch: { src: '/images/jebi/jebi-merchandise.jpg', position: 'center' },
   // Black-and-white coach portrait (cropped from a Morehouse Baseball post)

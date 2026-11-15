@@ -1,29 +1,36 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // JEBI merchandise — SERVER ONLY.
 //
-// Source: Thirty Four (shop 3RTY4.com) merchandise price list, with MTHC's
-// handwritten tier markups and eligibility. Quantity on hand and our cost stay
-// here on the backend; the public site only ever receives the member price.
+// Source: Thirty Four (shop 3RTY4.com) merchandise price list + tier poster,
+// with MTHC's handwritten tier markups and eligibility.
 //
-//   Member price = cost each + tier markup  (Tier 1 +$15, Tier 2 +$10, Tier 3 +$5)
+//   Price = cost + tier markup  (Tier 1 +$15, Tier 2 +$10, Tier 3 +$5)
 //
-// To update stock: change `qty` and redeploy the jebi service.
+// `qty` is the starting stock. What's left = qty − everything purchased or
+// claimed (see store.ts). To add stock, raise `qty` and redeploy.
 // ─────────────────────────────────────────────────────────────────────────────
+
+export interface ShopOption {
+  id: string;
+  label: string;
+  cost: number;
+}
 
 export interface ShopItem {
   id: string;
   name: string;
   details: string;
-  qty: number; // on hand — backend only
-  cost: number; // each, from Thirty Four — backend only
+  qty: number; // starting stock — backend only
+  cost: number; // default option's cost — backend only
+  options?: ShopOption[]; // print styles with their own cost
 }
 
 export interface ShopTier {
   tier: 1 | 2 | 3;
   name: string;
   markup: number;
-  sponsors: string[]; // sponsorship levels that receive this tier
-  individuals: string; // individual giving range
+  sponsors: string[];
+  individuals: string;
   items: ShopItem[];
 }
 
@@ -35,7 +42,17 @@ export const SHOP_TIERS: ShopTier[] = [
     sponsors: ['Title', 'Affiliate'],
     individuals: '$1,001+',
     items: [
-      { id: 'sweatsuit', name: 'Sweatsuits', details: 'Screen print', qty: 8, cost: 75 },
+      {
+        id: 'sweatsuit',
+        name: 'Sweatsuits',
+        details: 'Hoodie and joggers',
+        qty: 8,
+        cost: 75,
+        options: [
+          { id: 'screen-print', label: 'Screen print', cost: 75 },
+          { id: 'embroidered', label: 'Embroidered (left chest)', cost: 80 },
+        ],
+      },
       { id: 'quarter-zip', name: 'Quarter zips', details: 'Left-chest embroidery', qty: 8, cost: 55 },
       { id: 'polo', name: 'Polos', details: 'Embroidery', qty: 8, cost: 40 },
       { id: 'button-up', name: 'Button-ups', details: 'Left-chest embroidery', qty: 8, cost: 40 },
@@ -49,8 +66,28 @@ export const SHOP_TIERS: ShopTier[] = [
     sponsors: ['Homerun', 'Pennant'],
     individuals: '$251 – $1,000',
     items: [
-      { id: 'hoodie', name: 'Hoodies', details: 'Left-chest embroidery', qty: 10, cost: 30 },
-      { id: 'crewneck', name: 'Crewnecks', details: 'Left-chest embroidery', qty: 10, cost: 30 },
+      {
+        id: 'hoodie',
+        name: 'Hoodies',
+        details: 'Embroidered or screen print',
+        qty: 10,
+        cost: 30,
+        options: [
+          { id: 'embroidered', label: 'Embroidered (left chest)', cost: 30 },
+          { id: 'screen-print', label: 'Screen print', cost: 25 },
+        ],
+      },
+      {
+        id: 'crewneck',
+        name: 'Crewnecks',
+        details: 'Embroidered or screen print',
+        qty: 10,
+        cost: 30,
+        options: [
+          { id: 'embroidered', label: 'Embroidered (left chest)', cost: 30 },
+          { id: 'screen-print', label: 'Screen print', cost: 25 },
+        ],
+      },
       { id: 'cap', name: 'Baseball caps', details: 'Embroidery', qty: 10, cost: 30 },
       { id: 'tumbler', name: 'Tumblers', details: '', qty: 10, cost: 20 },
     ],
@@ -69,40 +106,34 @@ export const SHOP_TIERS: ShopTier[] = [
   },
 ];
 
-export const memberPrice = (t: ShopTier, i: ShopItem) => i.cost + t.markup;
+export const findItem = (id: string) => {
+  for (const t of SHOP_TIERS) {
+    const item = t.items.find((i) => i.id === id);
+    if (item) return { tier: t, item };
+  }
+  return null;
+};
 
-/** What the public site may see: no quantities, no costs. */
-export const publicCatalog = () =>
+/** Cost of the chosen option (or the item's default). */
+export const optionCost = (item: ShopItem, optionId?: string | null) =>
+  item.options?.find((o) => o.id === optionId)?.cost ?? item.cost;
+
+export const priceOf = (t: ShopTier, item: ShopItem, optionId?: string | null) => optionCost(item, optionId) + t.markup;
+
+/** What the public site may see: prices and how many are left — never cost. */
+export const publicCatalog = (remaining: (id: string) => number | null) =>
   SHOP_TIERS.map((t) => ({
     tier: t.tier,
     name: t.name,
     sponsors: t.sponsors,
     individuals: t.individuals,
-    items: t.items.map((i) => ({ id: i.id, name: i.name, details: i.details, price: memberPrice(t, i) })),
-    total: t.items.reduce((sum, i) => sum + memberPrice(t, i), 0),
+    items: t.items.map((i) => ({
+      id: i.id,
+      name: i.name,
+      details: i.details,
+      price: priceOf(t, i),
+      options: i.options?.map((o) => ({ id: o.id, label: o.label, price: o.cost + t.markup })),
+      remaining: remaining(i.id),
+    })),
+    total: t.items.reduce((sum, i) => sum + priceOf(t, i), 0),
   }));
-
-/** Full inventory for the private admin view. */
-export const inventoryReport = () => {
-  const tiers = SHOP_TIERS.map((t) => {
-    const items = t.items.map((i) => ({
-      ...i,
-      price: memberPrice(t, i),
-      stockCost: i.qty * i.cost,
-      stockRetail: i.qty * memberPrice(t, i),
-    }));
-    return {
-      tier: t.tier,
-      name: t.name,
-      markup: t.markup,
-      items,
-      subtotalCost: items.reduce((s, i) => s + i.stockCost, 0),
-      subtotalRetail: items.reduce((s, i) => s + i.stockRetail, 0),
-    };
-  });
-  return {
-    tiers,
-    totalCost: tiers.reduce((s, t) => s + t.subtotalCost, 0),
-    totalRetail: tiers.reduce((s, t) => s + t.subtotalRetail, 0),
-  };
-};

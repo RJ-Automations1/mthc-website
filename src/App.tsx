@@ -22,6 +22,7 @@ import JebiMedia from './pages/jebi/JebiMedia';
 import JebiShop from './pages/jebi/JebiShop';
 import JebiShopInventory from './pages/jebi/JebiShopInventory';
 import JebiShopItem from './pages/jebi/JebiShopItem';
+import JebiShopOrder from './pages/jebi/JebiShopOrder';
 import JebiContact from './pages/jebi/JebiContact';
 import { IS_JEBI_SITE } from './lib/siteMode';
 
@@ -37,6 +38,7 @@ const jebiRoutes = (
     <Route path="media" element={<JebiMedia />} />
     <Route path="shop" element={<JebiShop />} />
     <Route path="shop/inventory" element={<JebiShopInventory />} />
+    <Route path="shop/order/:ref" element={<JebiShopOrder />} />
     <Route path="shop/:itemId" element={<JebiShopItem />} />
     <Route path="contact" element={<JebiContact />} />
   </>
