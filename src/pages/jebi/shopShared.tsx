@@ -14,6 +14,8 @@ export interface CatalogItem {
   details: string;
   price: number;
   options?: CatalogOption[];
+  colors?: { id: string; label: string; hex: string }[];
+  sizes?: string[];
   remaining: number | null; // null = stock not available (ordering closed)
 }
 

@@ -16,6 +16,20 @@ export interface ShopOption {
   cost: number;
 }
 
+/** Colors every apparel item and cap comes in (from the Thirty Four mockup). */
+export const COLORS = [
+  { id: 'maroon', label: 'Maroon', hex: '#6b1426' },
+  { id: 'gray', label: 'Gray', hex: '#9ca3af' },
+  { id: 'white', label: 'White', hex: '#ffffff' },
+  { id: 'black', label: 'Black', hex: '#111111' },
+] as const;
+export const SIZES = ['S', 'M', 'L', 'XL', 'XXL'] as const;
+const ALL_COLORS = COLORS.map((c) => c.id) as string[];
+const ALL_SIZES = [...SIZES] as string[];
+const APPAREL = { colors: ALL_COLORS, sizes: ALL_SIZES };
+
+export const colorLabel = (id?: string | null) => COLORS.find((c) => c.id === id)?.label ?? null;
+
 export interface ShopItem {
   id: string;
   name: string;
@@ -23,6 +37,8 @@ export interface ShopItem {
   qty: number; // starting stock — backend only
   cost: number; // default option's cost — backend only
   options?: ShopOption[]; // print styles with their own cost
+  colors?: string[]; // color ids the buyer must pick from
+  sizes?: string[]; // sizes the buyer must pick from
 }
 
 export interface ShopTier {
@@ -48,14 +64,15 @@ export const SHOP_TIERS: ShopTier[] = [
         details: 'Hoodie and joggers',
         qty: 8,
         cost: 75,
+        ...APPAREL,
         options: [
           { id: 'screen-print', label: 'Screen print', cost: 75 },
           { id: 'embroidered', label: 'Embroidered (left chest)', cost: 80 },
         ],
       },
-      { id: 'quarter-zip', name: 'Quarter zips', details: 'Left-chest embroidery', qty: 8, cost: 55 },
-      { id: 'polo', name: 'Polos', details: 'Embroidery', qty: 8, cost: 40 },
-      { id: 'button-up', name: 'Button-ups', details: 'Left-chest embroidery', qty: 8, cost: 40 },
+      { id: 'quarter-zip', name: 'Quarter zips', details: 'Left-chest embroidery', qty: 8, cost: 55, ...APPAREL },
+      { id: 'polo', name: 'Polos', details: 'Embroidery', qty: 8, cost: 40, ...APPAREL },
+      { id: 'button-up', name: 'Button-ups', details: 'Left-chest embroidery', qty: 8, cost: 40, ...APPAREL },
       { id: 'bookbag', name: 'Bookbags', details: 'Embroidery', qty: 5, cost: 50 },
     ],
   },
@@ -72,6 +89,7 @@ export const SHOP_TIERS: ShopTier[] = [
         details: 'Embroidered or screen print',
         qty: 10,
         cost: 30,
+        ...APPAREL,
         options: [
           { id: 'embroidered', label: 'Embroidered (left chest)', cost: 30 },
           { id: 'screen-print', label: 'Screen print', cost: 25 },
@@ -83,12 +101,13 @@ export const SHOP_TIERS: ShopTier[] = [
         details: 'Embroidered or screen print',
         qty: 10,
         cost: 30,
+        ...APPAREL,
         options: [
           { id: 'embroidered', label: 'Embroidered (left chest)', cost: 30 },
           { id: 'screen-print', label: 'Screen print', cost: 25 },
         ],
       },
-      { id: 'cap', name: 'Baseball caps', details: 'Embroidery', qty: 10, cost: 30 },
+      { id: 'cap', name: 'Baseball caps', details: 'Embroidery', qty: 10, cost: 30, colors: ALL_COLORS },
       { id: 'tumbler', name: 'Tumblers', details: '', qty: 10, cost: 20 },
     ],
   },
@@ -133,6 +152,8 @@ export const publicCatalog = (remaining: (id: string) => number | null) =>
       details: i.details,
       price: priceOf(t, i),
       options: i.options?.map((o) => ({ id: o.id, label: o.label, price: o.cost + t.markup })),
+      colors: i.colors?.map((id) => COLORS.find((c) => c.id === id)!),
+      sizes: i.sizes,
       remaining: remaining(i.id),
     })),
     total: t.items.reduce((sum, i) => sum + priceOf(t, i), 0),

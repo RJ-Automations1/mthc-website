@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import pg from 'pg';
-import { SHOP_TIERS, findItem, priceOf } from './shopCatalog';
+import { SHOP_TIERS, findItem, priceOf, colorLabel } from './shopCatalog';
 
 /**
  * JEBI shop orders — every purchase and every free sponsor claim is a row here,
@@ -50,6 +50,8 @@ async function ensureTable() {
          ALTER TABLE jebi_shop_orders ADD COLUMN IF NOT EXISTS access_code VARCHAR(40);
          ALTER TABLE jebi_shop_orders ADD COLUMN IF NOT EXISTS square_order_id VARCHAR(64);
          ALTER TABLE jebi_shop_orders ADD COLUMN IF NOT EXISTS pay_url TEXT;
+         ALTER TABLE jebi_shop_orders ADD COLUMN IF NOT EXISTS color VARCHAR(20);
+         ALTER TABLE jebi_shop_orders ADD COLUMN IF NOT EXISTS size VARCHAR(10);
          CREATE TABLE IF NOT EXISTS jebi_access_codes (
            code VARCHAR(40) PRIMARY KEY,
            tier INTEGER NOT NULL CHECK (tier BETWEEN 1 AND 3),
@@ -159,6 +161,8 @@ export async function listCodes() {
 export async function placeOrder(input: {
   itemId: string;
   optionId?: string | null;
+  color?: string | null;
+  size?: string | null;
   qty: number;
   kind: OrderKind;
   tierCode?: number | null;
@@ -174,6 +178,10 @@ export async function placeOrder(input: {
     throw new StockError('Please choose a valid option.');
   }
   const optionId = item.options ? input.optionId || item.options[0].id : null;
+  const color = item.colors ? input.color || null : null;
+  const size = item.sizes ? input.size || null : null;
+  if (item.colors && (!color || !item.colors.includes(color))) throw new StockError('Please choose a color.');
+  if (item.sizes && (!size || !item.sizes.includes(size))) throw new StockError('Please choose a size.');
   const unit = input.kind === 'claim' ? 0 : priceOf(tier, item, optionId);
 
   await ensureTable();
@@ -199,12 +207,12 @@ export async function placeOrder(input: {
 
     const ref = newRef();
     await client.query(
-      `INSERT INTO jebi_shop_orders (ref, item_id, option_id, qty, unit_price, total, kind, tier_code, name, email, phone, access_code)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
-      [ref, item.id, optionId, input.qty, unit, unit * input.qty, input.kind, input.tierCode ?? null, input.name, input.email, input.phone ?? null, input.kind === 'claim' ? input.accessCode : null],
+      `INSERT INTO jebi_shop_orders (ref, item_id, option_id, qty, unit_price, total, kind, tier_code, name, email, phone, access_code, color, size)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+      [ref, item.id, optionId, input.qty, unit, unit * input.qty, input.kind, input.tierCode ?? null, input.name, input.email, input.phone ?? null, input.kind === 'claim' ? input.accessCode : null, color, size],
     );
     await client.query('COMMIT');
-    return { ref, item: item.name, option: item.options?.find((o) => o.id === optionId)?.label ?? null, qty: input.qty, unitPrice: unit, total: unit * input.qty, left: left - input.qty };
+    return { ref, item: item.name, option: item.options?.find((o) => o.id === optionId)?.label ?? null, color: colorLabel(color), size, qty: input.qty, unitPrice: unit, total: unit * input.qty, left: left - input.qty };
   } catch (e) {
     await client.query('ROLLBACK').catch(() => undefined);
     throw e;
@@ -216,7 +224,7 @@ export async function placeOrder(input: {
 export async function listOrders() {
   await ensureTable();
   const { rows } = await getPool()!.query(
-    `SELECT ref, item_id, option_id, qty, unit_price, total, kind, tier_code, name, email, phone, status, created_at
+    `SELECT ref, item_id, option_id, color, size, qty, unit_price, total, kind, tier_code, name, email, phone, status, created_at
      FROM jebi_shop_orders ORDER BY created_at DESC LIMIT 500`,
   );
   return rows;

@@ -30,6 +30,8 @@ interface Order {
   ref: string;
   item_id: string;
   option_id: string | null;
+  color: string | null;
+  size: string | null;
   qty: number;
   total: number;
   kind: 'purchase' | 'claim';
@@ -365,7 +367,11 @@ export default function JebiShopInventory() {
                         </td>
                         <td className="px-3 py-3">
                           {itemName(o.item_id)}
-                          {o.option_id && <span className="block text-xs text-gray-500">{o.option_id.replace('-', ' ')}</span>}
+                          {(o.option_id || o.color || o.size) && (
+                            <span className="block text-xs text-gray-500">
+                              {[o.option_id?.replace('-', ' '), o.color, o.size && `Size ${o.size}`].filter(Boolean).join(' · ')}
+                            </span>
+                          )}
                         </td>
                         <td className="px-3 py-3 text-right">{o.qty}</td>
                         <td className="px-3 py-3 text-right">{o.kind === 'claim' ? '—' : money(o.total)}</td>

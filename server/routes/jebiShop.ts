@@ -23,7 +23,7 @@ import {
  *
  *   GET  /api/jebi/shop/catalog               items, prices, options and how many are left
  *   POST /api/jebi/shop/unlock                { code } -> which tiers that access code opens
- *   POST /api/jebi/shop/order                 buy: { itemId, optionId?, qty, name, email, phone? }
+ *   POST /api/jebi/shop/order                 buy: { itemId, optionId?, color?, size?, qty, name, email, phone? }
  *   POST /api/jebi/shop/claim                 free sponsor claim: { itemId, optionId?, code, name, email, phone? }
  *   GET  /api/jebi/shop/inventory             stock + orders           (header x-admin-key)
  *   POST /api/jebi/shop/orders/:ref/status    { status } paid|fulfilled|cancelled|pending (x-admin-key)
@@ -133,7 +133,7 @@ async function handleOrder(req: any, res: any, kind: 'purchase' | 'claim') {
   }
 
   try {
-    const order = await placeOrder({ itemId: found.item.id, optionId: req.body?.optionId || null, qty, kind, tierCode, accessCode, ...buyer });
+    const order = await placeOrder({ itemId: found.item.id, optionId: req.body?.optionId || null, color: clean(req.body?.color, 20) || null, size: clean(req.body?.size, 10) || null, qty, kind, tierCode, accessCode, ...buyer });
     if (kind === 'claim') return res.json({ ok: true, ...order, payUrl: null, exactAmount: false });
 
     // Purchase: a Square checkout page pre-filled with this exact item and total
@@ -141,7 +141,8 @@ async function handleOrder(req: any, res: any, kind: 'purchase' | 'claim') {
     let exactAmount = false;
     if (squareEnabled()) {
       try {
-        const title = `JEBI ${order.item}${order.option ? ` — ${order.option}` : ''} × ${order.qty}`;
+        const picks = [order.option, order.color, order.size && `Size ${order.size}`].filter(Boolean).join(', ');
+        const title = `JEBI ${order.item}${picks ? ` — ${picks}` : ''} × ${order.qty}`;
         const checkout = await createCheckout({ ref: order.ref, title, totalDollars: order.total, email: buyer.email, returnUrl: `${siteOrigin(req)}/shop/order/${order.ref}` });
         await saveCheckout(order.ref, checkout.squareOrderId, checkout.url);
         payUrl = checkout.url;

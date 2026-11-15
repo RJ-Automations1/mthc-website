@@ -25,6 +25,8 @@ interface OrderResult {
   ref: string;
   item: string;
   option: string | null;
+  color: string | null;
+  size: string | null;
   qty: number;
   total: number;
   payUrl: string | null;
@@ -72,6 +74,61 @@ function OptionPicker({ item, value, onChange, free = false }: { item: CatalogIt
   );
 }
 
+/** Color swatches and size buttons for apparel. */
+function ColorSizePicker({
+  item,
+  color,
+  size,
+  onColor,
+  onSize,
+  name,
+}: {
+  item: CatalogItem;
+  color: string;
+  size: string;
+  onColor: (id: string) => void;
+  onSize: (s: string) => void;
+  name: string;
+}) {
+  const chip = (on: boolean) =>
+    `cursor-pointer rounded-xl text-sm font-semibold ring-1 transition has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-jebi ${
+      on ? 'bg-jebi text-white ring-jebi' : 'bg-white text-ink ring-black/10 hover:ring-jebi/40'
+    }`;
+  return (
+    <>
+      {item.colors?.length ? (
+        <fieldset>
+          <legend className="text-sm font-semibold text-gray-700 mb-2">
+            Color * {color && <span className="font-normal text-gray-500">· {item.colors.find((c) => c.id === color)?.label}</span>}
+          </legend>
+          <div className="flex flex-wrap gap-2">
+            {item.colors.map((c) => (
+              <label key={c.id} className={`${chip(color === c.id)} inline-flex items-center gap-2 px-3.5 py-2`}>
+                <input type="radio" required name={`${name}-color`} value={c.id} checked={color === c.id} onChange={() => onColor(c.id)} className="sr-only" />
+                <span className="w-4 h-4 rounded-full ring-1 ring-black/20" style={{ background: c.hex }} aria-hidden="true" />
+                {c.label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      ) : null}
+      {item.sizes?.length ? (
+        <fieldset>
+          <legend className="text-sm font-semibold text-gray-700 mb-2">Size *</legend>
+          <div className="flex flex-wrap gap-2">
+            {item.sizes.map((s) => (
+              <label key={s} className={`${chip(size === s)} min-w-[3.25rem] px-3 py-2 text-center`}>
+                <input type="radio" required name={`${name}-size`} value={s} checked={size === s} onChange={() => onSize(s)} className="sr-only" />
+                {s}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      ) : null}
+    </>
+  );
+}
+
 /** One merchandise item on its own page: photo, price, stock, buy and claim. */
 export default function JebiShopItem() {
   const { itemId } = useParams();
@@ -83,6 +140,8 @@ export default function JebiShopItem() {
   usePageTitle(item ? item.name : 'Shop');
 
   const [optionId, setOptionId] = useState('');
+  const [color, setColor] = useState('');
+  const [size, setSize] = useState('');
   const [qty, setQty] = useState(1);
   const [buyer, setBuyer] = useState({ name: '', email: '', phone: '' });
   const [code, setCode] = useState(readCode);
@@ -95,6 +154,8 @@ export default function JebiShopItem() {
   // Fresh form whenever the visitor moves to a different item
   useEffect(() => {
     setOptionId('');
+    setColor('');
+    setSize('');
     setQty(1);
     setDone(null);
     setMsg(null);
@@ -118,7 +179,7 @@ export default function JebiShopItem() {
       const r = await fetch(`/api/jebi/shop/${kind === 'purchase' ? 'order' : 'claim'}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ itemId: item.id, optionId: optionId || null, qty, code, ...buyer }),
+        body: JSON.stringify({ itemId: item.id, optionId: optionId || null, color: color || null, size: size || null, qty, code, ...buyer }),
       });
       const d = await r.json();
       if (!r.ok || !d.ok) {
@@ -229,7 +290,10 @@ export default function JebiShopItem() {
         </h1>
         <p className="mt-3 text-gray-600">
           {done.qty} × {done.item}
-          {done.option ? ` (${done.option})` : ''} · Order <strong className="text-ink">{done.ref}</strong>
+          {[done.option, done.color, done.size && `Size ${done.size}`].filter(Boolean).length
+            ? ` (${[done.option, done.color, done.size && `Size ${done.size}`].filter(Boolean).join(', ')})`
+            : ''}{' '}
+          · Order <strong className="text-ink">{done.ref}</strong>
         </p>
         {done.kind === 'purchase' && done.payUrl ? (
           <>
@@ -278,11 +342,11 @@ export default function JebiShopItem() {
             )}
             {ITEM_COLORS[item.id] && (
               <figure className="rounded-2xl overflow-hidden bg-white ring-1 ring-black/5 shadow-sm">
-                <img src={ITEM_COLORS[item.id]} alt={`${item.name} in maroon, gray, white and black`} loading="lazy" className="w-full aspect-[4/3] object-cover" />
+                <img src={ITEM_COLORS[item.id]} alt={`${item.name} in ${(item.colors ?? []).map((c) => c.label.toLowerCase()).join(', ')}`} loading="lazy" className="w-full aspect-[4/3] object-cover" />
                 <figcaption className="px-3 py-2 text-xs text-gray-600 flex items-center gap-2">
                   <span className="font-semibold text-ink">Colors</span>
-                  {['#6b1426', '#9ca3af', '#ffffff', '#111111'].map((c) => (
-                    <span key={c} className="w-3.5 h-3.5 rounded-full ring-1 ring-black/15" style={{ background: c }} aria-hidden="true" />
+                  {(item.colors ?? []).map((c) => (
+                    <span key={c.id} className="w-3.5 h-3.5 rounded-full ring-1 ring-black/15" style={{ background: c.hex }} aria-hidden="true" />
                   ))}
                 </figcaption>
               </figure>
@@ -322,6 +386,7 @@ export default function JebiShopItem() {
                   <ShoppingBag className="w-5 h-5 text-jebi" aria-hidden="true" /> Buy
                 </h2>
                 <OptionPicker item={item} value={optionId} onChange={setOptionId} />
+                <ColorSizePicker item={item} color={color} size={size} onColor={setColor} onSize={setSize} name={`buy-${item.id}`} />
                 <label className="block text-sm font-semibold text-gray-700">
                   Quantity
                   <select value={qty} onChange={(e) => setQty(Number(e.target.value))} className="input mt-1 !w-32">
@@ -368,6 +433,7 @@ export default function JebiShopItem() {
                   )}
                 </div>
                 <OptionPicker item={item} value={optionId} onChange={setOptionId} free />
+                <ColorSizePicker item={item} color={color} size={size} onColor={setColor} onSize={setSize} name={`claim-${item.id}`} />
                 <label className="block text-sm font-semibold text-gray-700">
                   Access code *
                   <input
