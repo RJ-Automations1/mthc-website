@@ -32,22 +32,51 @@ interface OrderResult {
   payUrl: string | null;
 }
 
-/** Shared name / email / phone fields. */
-function BuyerFields({ v, set }: { v: { name: string; email: string; phone: string }; set: (k: 'name' | 'email' | 'phone', val: string) => void }) {
+type BuyerKey = 'name' | 'email' | 'phone' | 'shipLine1' | 'shipLine2' | 'shipCity' | 'shipState' | 'shipZip';
+type Buyer = Record<BuyerKey, string>;
+const EMPTY_BUYER: Buyer = { name: '', email: '', phone: '', shipLine1: '', shipLine2: '', shipCity: '', shipState: '', shipZip: '' };
+
+/** Shared contact + shipping address fields. */
+function BuyerFields({ v, set }: { v: Buyer; set: (k: BuyerKey, val: string) => void }) {
   return (
-    <div className="grid sm:grid-cols-2 gap-3">
-      <label className="text-sm font-semibold text-gray-700">
-        Full name *
-        <input required className="input mt-1" value={v.name} onChange={(e) => set('name', e.target.value)} autoComplete="name" />
-      </label>
-      <label className="text-sm font-semibold text-gray-700">
-        Email *
-        <input required type="email" className="input mt-1" value={v.email} onChange={(e) => set('email', e.target.value)} autoComplete="email" />
-      </label>
-      <label className="text-sm font-semibold text-gray-700 sm:col-span-2">
-        Phone <span className="font-normal text-gray-400">(optional)</span>
-        <input type="tel" className="input mt-1" value={v.phone} onChange={(e) => set('phone', e.target.value)} autoComplete="tel" />
-      </label>
+    <div className="space-y-4">
+      <div className="grid sm:grid-cols-2 gap-3">
+        <label className="text-sm font-semibold text-gray-700">
+          Full name *
+          <input required className="input mt-1" value={v.name} onChange={(e) => set('name', e.target.value)} autoComplete="name" />
+        </label>
+        <label className="text-sm font-semibold text-gray-700">
+          Email *
+          <input required type="email" className="input mt-1" value={v.email} onChange={(e) => set('email', e.target.value)} autoComplete="email" />
+        </label>
+        <label className="text-sm font-semibold text-gray-700 sm:col-span-2">
+          Phone <span className="font-normal text-gray-400">(optional)</span>
+          <input type="tel" className="input mt-1" value={v.phone} onChange={(e) => set('phone', e.target.value)} autoComplete="tel" />
+        </label>
+      </div>
+      <fieldset className="grid sm:grid-cols-6 gap-3">
+        <legend className="text-sm font-semibold text-gray-700 mb-2">Shipping address *</legend>
+        <label className="text-sm font-semibold text-gray-700 sm:col-span-6">
+          Street address
+          <input required className="input mt-1" value={v.shipLine1} onChange={(e) => set('shipLine1', e.target.value)} autoComplete="shipping address-line1" />
+        </label>
+        <label className="text-sm font-semibold text-gray-700 sm:col-span-6">
+          Apt, suite, unit <span className="font-normal text-gray-400">(optional)</span>
+          <input className="input mt-1" value={v.shipLine2} onChange={(e) => set('shipLine2', e.target.value)} autoComplete="shipping address-line2" />
+        </label>
+        <label className="text-sm font-semibold text-gray-700 sm:col-span-3">
+          City
+          <input required className="input mt-1" value={v.shipCity} onChange={(e) => set('shipCity', e.target.value)} autoComplete="shipping address-level2" />
+        </label>
+        <label className="text-sm font-semibold text-gray-700 sm:col-span-1">
+          State
+          <input required maxLength={40} className="input mt-1 uppercase" value={v.shipState} onChange={(e) => set('shipState', e.target.value)} autoComplete="shipping address-level1" />
+        </label>
+        <label className="text-sm font-semibold text-gray-700 sm:col-span-2">
+          ZIP
+          <input required inputMode="numeric" pattern="\d{5}(-\d{4})?" className="input mt-1" value={v.shipZip} onChange={(e) => set('shipZip', e.target.value)} autoComplete="shipping postal-code" />
+        </label>
+      </fieldset>
     </div>
   );
 }
@@ -143,7 +172,7 @@ export default function JebiShopItem() {
   const [color, setColor] = useState('');
   const [size, setSize] = useState('');
   const [qty, setQty] = useState(1);
-  const [buyer, setBuyer] = useState({ name: '', email: '', phone: '' });
+  const [buyer, setBuyer] = useState<Buyer>(EMPTY_BUYER);
   const [code, setCode] = useState(readCode);
   const [codeUsed, setCodeUsed] = useState(readCodeUsed);
   const [redirecting, setRedirecting] = useState<number | null>(null);
@@ -169,7 +198,7 @@ export default function JebiShopItem() {
     if (window.location.hash === '#claim' && item) requestAnimationFrame(() => document.getElementById('claim')?.scrollIntoView({ block: 'start' }));
   }, [item]);
 
-  const setField = (k: 'name' | 'email' | 'phone', val: string) => setBuyer((b) => ({ ...b, [k]: val }));
+  const setField = (k: BuyerKey, val: string) => setBuyer((b) => ({ ...b, [k]: val }));
 
   const send = async (kind: 'purchase' | 'claim') => {
     if (!item) return;
@@ -307,9 +336,9 @@ export default function JebiShopItem() {
             </a>
           </>
         ) : (
-          <p className="mt-6 text-gray-600">This item is reserved for you as part of your sponsorship — no payment needed. MTHC will contact you about pickup.</p>
+          <p className="mt-6 text-gray-600">This item is reserved for you as part of your sponsorship — no payment needed. MTHC will ship it to the address you entered.</p>
         )}
-        <p className="mt-6 text-xs text-gray-500">A copy of these details will be useful at pickup — screenshot this page or note your order number.</p>
+        <p className="mt-6 text-xs text-gray-500">Keep your order number for reference — screenshot this page or note it down.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link to={jebiPath('/shop')} className="btn-secondary text-sm uppercase tracking-wider">
             Back to the shop

@@ -32,6 +32,11 @@ interface Order {
   option_id: string | null;
   color: string | null;
   size: string | null;
+  ship_line1: string | null;
+  ship_line2: string | null;
+  ship_city: string | null;
+  ship_state: string | null;
+  ship_zip: string | null;
   qty: number;
   total: number;
   kind: 'purchase' | 'claim';
@@ -61,6 +66,26 @@ interface Inventory {
 }
 
 const money = (n: number) => `$${n.toLocaleString('en-US')}`;
+const shipTo = (o: Order) =>
+  o.ship_line1 ? [o.ship_line1, o.ship_line2, `${o.ship_city}, ${o.ship_state} ${o.ship_zip}`].filter(Boolean).join(', ') : '';
+
+/** Spreadsheet of orders to hand to whoever ships them (opens in Excel / Google Sheets). */
+function downloadCsv(orders: Order[], itemName: (id: string) => string) {
+  const head = ['Order', 'Date', 'Type', 'Status', 'Item', 'Style', 'Color', 'Size', 'Qty', 'Total', 'Name', 'Email', 'Phone', 'Street', 'Apt/Unit', 'City', 'State', 'ZIP'];
+  const rows = orders
+    .filter((o) => o.status !== 'cancelled')
+    .map((o) => [
+      o.ref, new Date(o.created_at).toLocaleDateString(), o.kind === 'claim' ? `Sponsor claim (Tier ${o.tier_code})` : 'Purchase', o.status,
+      itemName(o.item_id), o.option_id?.replace('-', ' ') ?? '', o.color ?? '', o.size ?? '', o.qty, o.kind === 'claim' ? 0 : o.total,
+      o.name, o.email, o.phone ?? '', o.ship_line1 ?? '', o.ship_line2 ?? '', o.ship_city ?? '', o.ship_state ?? '', o.ship_zip ?? '',
+    ]);
+  const csv = [head, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = `jebi-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 const KEY = 'jebi-admin-key';
 const STATUS_STYLE: Record<Order['status'], string> = {
   pending: 'bg-amber-100 text-amber-800',
@@ -338,14 +363,19 @@ export default function JebiShopInventory() {
           </div>
 
           <div className="card hover:translate-y-0">
-            <div className="px-6 py-4 bg-ink text-white">
+            <div className="px-6 py-4 bg-ink text-white flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-display uppercase text-2xl font-bold">Orders & claims</h2>
+              {data.orders.length > 0 && (
+                <button type="button" onClick={() => downloadCsv(data.orders, itemName)} className="rounded-full bg-gold px-4 py-2 text-xs font-bold uppercase tracking-wider text-ink hover:bg-white transition">
+                  Download for shipping (CSV)
+                </button>
+              )}
             </div>
             {data.orders.length === 0 ? (
               <p className="px-6 py-6 text-gray-500">No orders yet.</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[980px] text-sm">
+                <table className="w-full min-w-[1180px] text-sm">
                   <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
                     <tr>
                       <th className="text-left px-6 py-3">Order</th>
@@ -354,6 +384,7 @@ export default function JebiShopInventory() {
                       <th className="text-right px-3 py-3">Total</th>
                       <th className="text-left px-3 py-3">Type</th>
                       <th className="text-left px-3 py-3">Customer</th>
+                      <th className="text-left px-3 py-3">Ship to</th>
                       <th className="text-left px-3 py-3">Status</th>
                       <th className="text-right px-6 py-3">Update</th>
                     </tr>
@@ -383,6 +414,7 @@ export default function JebiShopInventory() {
                             {o.phone ? ` · ${o.phone}` : ''}
                           </span>
                         </td>
+                        <td className="px-3 py-3 text-xs text-gray-600 max-w-[220px]">{shipTo(o) || '—'}</td>
                         <td className="px-3 py-3">
                           <span className={`rounded-full px-2.5 py-1 text-xs font-bold uppercase ${STATUS_STYLE[o.status]}`}>{o.status}</span>
                         </td>

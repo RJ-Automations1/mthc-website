@@ -67,7 +67,16 @@ function readBuyer(body: any) {
   const phone = clean(body?.phone, 40) || null;
   if (!name) return { error: 'Please enter your name.' };
   if (!isEmail(email)) return { error: 'Please enter a valid email address.' };
-  return { name, email, phone };
+  const ship = {
+    line1: clean(body?.shipLine1, 160),
+    line2: clean(body?.shipLine2, 160) || null,
+    city: clean(body?.shipCity, 80),
+    state: clean(body?.shipState, 40),
+    zip: clean(body?.shipZip, 12),
+  };
+  if (!ship.line1 || !ship.city || !ship.state) return { error: 'Please enter your full shipping address.' };
+  if (!/^\d{5}(-\d{4})?$/.test(ship.zip)) return { error: 'Please enter a valid ZIP code.' };
+  return { name, email, phone, ship };
 }
 
 router.get('/catalog', async (_req, res) => {
