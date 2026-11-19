@@ -13,6 +13,7 @@ import adminRoutes from './routes/admin';
 import boardRoutes from './routes/board';
 import historyRoutes from './routes/history';
 import jebiShopRoutes from './routes/jebiShop';
+import fundraiserRoutes from './routes/fundraiser';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -32,6 +33,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/board', boardRoutes);
 app.use('/api/history', historyRoutes);
 app.use('/api/jebi/shop', jebiShopRoutes);
+app.use('/api/fundraiser', fundraiserRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

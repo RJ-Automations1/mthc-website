@@ -33,6 +33,7 @@ export async function createCheckout(order: {
   totalDollars: number;
   email?: string;
   returnUrl: string;
+  note?: string; // shows on the Square payment record; defaults to the JEBI shop note
 }) {
   const { result } = await square().checkoutApi.createPaymentLink({
     idempotencyKey: crypto.randomUUID(),
@@ -43,7 +44,7 @@ export async function createCheckout(order: {
     },
     checkoutOptions: { redirectUrl: order.returnUrl, askForShippingAddress: false },
     prePopulatedData: order.email ? { buyerEmail: order.email } : undefined,
-    paymentNote: `JEBI shop order ${order.ref}`,
+    paymentNote: (order.note || `JEBI shop order ${order.ref}`).slice(0, 500),
   });
   const link = result.paymentLink;
   if (!link?.url) throw new Error('Square did not return a checkout URL');

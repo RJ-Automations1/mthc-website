@@ -24,6 +24,11 @@ import JebiShopInventory from './pages/jebi/JebiShopInventory';
 import JebiShopItem from './pages/jebi/JebiShopItem';
 import JebiShopOrder from './pages/jebi/JebiShopOrder';
 import JebiContact from './pages/jebi/JebiContact';
+import FundraiserJoin from './pages/fundraiser/FundraiserJoin';
+import FundraiserInvite from './pages/fundraiser/FundraiserInvite';
+import FundraiserThanks from './pages/fundraiser/FundraiserThanks';
+import FundraiserInbox from './pages/fundraiser/FundraiserInbox';
+import FundraiserAdmin from './pages/fundraiser/FundraiserAdmin';
 import { IS_JEBI_SITE } from './lib/siteMode';
 
 /** The nine JEBI pages, mounted under whatever base path the build uses. */
@@ -82,6 +87,13 @@ function MthcSite() {
           <Route path="/donate" element={<Donate />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/board" element={<BoardMembers />} />
+
+          {/* Player fundraiser: invite links, private envelope mailboxes, admin */}
+          <Route path="/fundraiser" element={<FundraiserJoin />} />
+          <Route path="/fundraiser/admin" element={<FundraiserAdmin />} />
+          <Route path="/fundraiser/:slug" element={<FundraiserInvite />} />
+          <Route path="/fundraiser/:slug/thanks/:ref" element={<FundraiserThanks />} />
+          <Route path="/fundraiser/:slug/inbox" element={<FundraiserInbox />} />
 
           {/* Jay Edwards Baseball Invitational (in-app fallback when VITE_JEBI_URL isn't set) */}
           <Route path="/jebi" element={<JebiLayout />}>
