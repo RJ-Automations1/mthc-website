@@ -24,6 +24,7 @@ export interface Player {
   class_year: string | null;
   photo: string | null;
   claimed_at: string | null;
+  pin_hash: string | null;
   created_at: string;
 }
 
@@ -39,6 +40,7 @@ export interface Gift {
   square_order_id: string | null;
   pay_url: string | null;
   opened_at: string | null;
+  contact_id: number | null;
   created_at: string;
 }
 
@@ -55,7 +57,7 @@ function getPool() {
   return pool;
 }
 
-async function db() {
+export async function db() {
   const p = getPool();
   if (!p) throw new Error('NO_DB');
   if (!ready) {
@@ -91,7 +93,29 @@ async function db() {
          ALTER TABLE fundraiser_players ADD COLUMN IF NOT EXISTS position VARCHAR(20);
          ALTER TABLE fundraiser_players ADD COLUMN IF NOT EXISTS class_year VARCHAR(10);
          ALTER TABLE fundraiser_players ADD COLUMN IF NOT EXISTS photo TEXT;
-         ALTER TABLE fundraiser_players ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ;`,
+         ALTER TABLE fundraiser_players ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ;
+         ALTER TABLE fundraiser_players ADD COLUMN IF NOT EXISTS pin_hash VARCHAR(200);
+         CREATE TABLE IF NOT EXISTS fundraiser_contacts (
+           id SERIAL PRIMARY KEY,
+           ref VARCHAR(16) UNIQUE NOT NULL,
+           player_id INTEGER NOT NULL REFERENCES fundraiser_players(id) ON DELETE CASCADE,
+           name VARCHAR(120) NOT NULL,
+           email VARCHAR(200),
+           phone VARCHAR(20),
+           emailed_at TIMESTAMPTZ,
+           texted_at TIMESTAMPTZ,
+           sms_sent_at TIMESTAMPTZ,
+           visited_at TIMESTAMPTZ,
+           donated_at TIMESTAMPTZ,
+           followups INTEGER NOT NULL DEFAULT 0,
+           last_followup_at TIMESTAMPTZ,
+           last_chance_at TIMESTAMPTZ,
+           unsubscribed_at TIMESTAMPTZ,
+           send_error VARCHAR(300),
+           created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+         );
+         CREATE INDEX IF NOT EXISTS fundraiser_contacts_player ON fundraiser_contacts (player_id);
+         ALTER TABLE fundraiser_gifts ADD COLUMN IF NOT EXISTS contact_id INTEGER REFERENCES fundraiser_contacts(id) ON DELETE SET NULL;`,
       )
       .then(() => seedRoster(p))
       .catch((e) => {
@@ -121,7 +145,7 @@ async function seedRoster(p: pg.Pool) {
 export const storeAvailable = () => Boolean(process.env.DATABASE_URL);
 
 const ALPHA = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-const randomChunk = (n: number) => Array.from(crypto.randomBytes(n), (b) => ALPHA[b % ALPHA.length]).join('');
+export const randomChunk = (n: number) => Array.from(crypto.randomBytes(n), (b) => ALPHA[b % ALPHA.length]).join('');
 const newRef = () => `MTHC-${randomChunk(6)}`;
 const newKey = () => crypto.randomBytes(18).toString('base64url');
 
@@ -169,12 +193,40 @@ export async function getPlayer(slug: string) {
   return (rows[0] as Player | undefined) ?? null;
 }
 
-export async function updatePlayer(id: number, fields: { blurb?: string | null; goal?: number }) {
+export async function updatePlayer(id: number, fields: { blurb?: string | null; goal?: number; email?: string | null }) {
   const p = await db();
   await p.query(
-    `UPDATE fundraiser_players SET blurb = COALESCE($2, blurb), goal = COALESCE($3, goal) WHERE id = $1`,
-    [id, fields.blurb ?? null, fields.goal ?? null],
+    `UPDATE fundraiser_players SET blurb = COALESCE($2, blurb), goal = COALESCE($3, goal),
+       email = CASE WHEN $4::boolean THEN $5 ELSE email END WHERE id = $1`,
+    [id, fields.blurb ?? null, fields.goal ?? null, fields.email !== undefined, fields.email || null],
   );
+}
+
+// ── Player PIN (portal sign-in) ──────────────────────────────────────────────
+const hashPin = (pin: string, salt = crypto.randomBytes(12).toString('hex')) =>
+  `${salt}:${crypto.scryptSync(pin, salt, 32).toString('hex')}`;
+
+export function pinMatches(pin: string, stored: string) {
+  const [salt, hash] = stored.split(':');
+  if (!salt || !hash) return false;
+  const a = Buffer.from(hashPin(pin, salt).split(':')[1], 'hex');
+  const b = Buffer.from(hash, 'hex');
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+/** Sets a PIN only if the player doesn't have one yet. Returns false if one already exists. */
+export async function setFirstPin(id: number, pin: string) {
+  const p = await db();
+  const { rowCount } = await p.query(
+    `UPDATE fundraiser_players SET pin_hash = $2, claimed_at = now() WHERE id = $1 AND pin_hash IS NULL`,
+    [id, hashPin(pin)],
+  );
+  return rowCount === 1;
+}
+
+export async function clearPin(id: number) {
+  const p = await db();
+  await p.query(`UPDATE fundraiser_players SET pin_hash = NULL, claimed_at = NULL WHERE id = $1`, [id]);
 }
 
 /** New private mailbox link; the old one stops working. */
@@ -220,14 +272,15 @@ export async function createGift(input: {
   donorEmail: string;
   note: string | null;
   anonymous: boolean;
+  contactId?: number | null;
 }) {
   const p = await db();
   for (let attempt = 0; attempt < 5; attempt++) {
     const ref = newRef();
     const { rows } = await p.query(
-      `INSERT INTO fundraiser_gifts (ref, player_id, amount, donor_name, donor_email, note, anonymous)
-       VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (ref) DO NOTHING RETURNING ref`,
-      [ref, input.playerId, input.amount, input.donorName, input.donorEmail, input.note, input.anonymous],
+      `INSERT INTO fundraiser_gifts (ref, player_id, amount, donor_name, donor_email, note, anonymous, contact_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (ref) DO NOTHING RETURNING ref`,
+      [ref, input.playerId, input.amount, input.donorName, input.donorEmail, input.note, input.anonymous, input.contactId ?? null],
     );
     if (rows[0]) return ref;
   }
