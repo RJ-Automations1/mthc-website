@@ -21,6 +21,7 @@ export const PHOTOS = {
   scheduleHero: { src: '/images/dugout.jpg', position: 'center 42%' },
   donateHero: { src: '/images/program-support.jpg', position: 'center 40%' },
   leaderboardHero: { src: '/images/senior-day.jpg', position: 'center 55%' },
+  fundraiserHero: { src: '/images/team-2026.jpg', position: 'center 45%' },
   boardHero: { src: '/images/hbcu-allstar-team-photo.jpg', position: 'center 35%' },
 
   // Jay Edwards Baseball Invitational (/jebi) page heroes
