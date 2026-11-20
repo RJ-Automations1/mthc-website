@@ -15,14 +15,23 @@ import nodemailer from 'nodemailer';
  * email/text settings below are filled in. Leave it off until you're ready to go live.
  *
  * Text (automated, carrier-registered number):
- *   TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_FROM (a +1 number) or TWILIO_MESSAGING_SERVICE_SID
+ *   TWILIO_ACCOUNT_SID (AC…), plus either TWILIO_AUTH_TOKEN or an API key pair
+ *   TWILIO_API_KEY (SK…) + TWILIO_API_SECRET, and TWILIO_FROM (a +1 number) or TWILIO_MESSAGING_SERVICE_SID
  */
 
 /** Master switch: the site sends nothing unless this is exactly "on". */
 export const sendingOn = () => (process.env.FUNDRAISER_SENDING || '').trim().toLowerCase() === 'on';
 export const emailConfigured = () => Boolean(process.env.RESEND_API_KEY || (process.env.SMTP_HOST && process.env.SMTP_USER));
 export const smsConfigured = () =>
-  Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && (process.env.TWILIO_FROM || process.env.TWILIO_MESSAGING_SERVICE_SID));
+  Boolean(
+    process.env.TWILIO_ACCOUNT_SID &&
+      (process.env.TWILIO_AUTH_TOKEN || (process.env.TWILIO_API_KEY && process.env.TWILIO_API_SECRET)) &&
+      (process.env.TWILIO_FROM || process.env.TWILIO_MESSAGING_SERVICE_SID),
+  );
+const twilioAuth = () =>
+  process.env.TWILIO_API_KEY && process.env.TWILIO_API_SECRET
+    ? `${process.env.TWILIO_API_KEY}:${process.env.TWILIO_API_SECRET}`
+    : `${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`;
 export const emailEnabled = () => sendingOn() && emailConfigured();
 export const smsEnabled = () => sendingOn() && smsConfigured();
 
@@ -78,7 +87,7 @@ export async function sendSms(to: string, body: string) {
   const r = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
     method: 'POST',
     headers: {
-      Authorization: `Basic ${Buffer.from(`${sid}:${process.env.TWILIO_AUTH_TOKEN}`).toString('base64')}`,
+      Authorization: `Basic ${Buffer.from(twilioAuth()).toString('base64')}`,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: form,
