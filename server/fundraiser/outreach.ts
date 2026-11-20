@@ -42,6 +42,7 @@ export interface Contact {
   emailed_at: string | null;
   texted_at: string | null;
   sms_sent_at: string | null;
+  sms_consent_at: string | null;
   visited_at: string | null;
   donated_at: string | null;
   followups: number;
@@ -63,6 +64,7 @@ export function contactView(c: Contact, slug: string) {
     name: c.name,
     email: c.email,
     phone: c.phone,
+    smsConsent: Boolean(c.sms_consent_at),
     link: contactLink(slug, c.ref),
     emailed: Boolean(c.emailed_at),
     texted: Boolean(c.texted_at || c.sms_sent_at),
@@ -89,7 +91,11 @@ export async function listContacts(playerId: number) {
 
 export class ContactError extends Error {}
 
-export async function addContacts(playerId: number, input: { name: string; email?: string; phone?: string }[]) {
+/**
+ * smsConsent: the player confirmed every person with a phone number agreed to get
+ * MTHC texts. Carriers require that before we text anyone, so phones need it.
+ */
+export async function addContacts(playerId: number, input: { name: string; email?: string; phone?: string }[], smsConsent = false) {
   const p = await db();
   const { rows } = await p.query(
     `SELECT COUNT(*)::int AS n, ARRAY_AGG(LOWER(email)) FILTER (WHERE email IS NOT NULL) AS emails,
@@ -111,11 +117,12 @@ export async function addContacts(playerId: number, input: { name: string; email
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { skipped.push(`${name} (email doesn't look right)`); continue; }
     if (phoneRaw && !phone) { skipped.push(`${name} (phone needs 10 digits)`); continue; }
     if (!email && !phone) { skipped.push(`${name} (needs an email or phone)`); continue; }
+    if (phone && !smsConsent) throw new ContactError('Check the box confirming the people you added agreed to get texts from MTHC.');
     if ((email && emails.has(email)) || (phone && phones.has(phone))) { skipped.push(`${name} (already on your list)`); continue; }
     if (count >= MAX_CONTACTS) throw new ContactError(`You can invite up to ${MAX_CONTACTS} people.`);
     await p.query(
-      `INSERT INTO fundraiser_contacts (ref, player_id, name, email, phone) VALUES ($1,$2,$3,$4,$5)`,
-      [randomChunk(10), playerId, name, email, phone],
+      `INSERT INTO fundraiser_contacts (ref, player_id, name, email, phone, sms_consent_at) VALUES ($1,$2,$3,$4,$5,$6)`,
+      [randomChunk(10), playerId, name, email, phone, phone ? new Date() : null],
     );
     if (email) emails.add(email);
     if (phone) phones.add(phone);
@@ -209,14 +216,14 @@ export async function sendInvites(player: Player) {
   const { rows } = await p.query(
     `SELECT * FROM fundraiser_contacts
      WHERE player_id = $1 AND unsubscribed_at IS NULL AND donated_at IS NULL
-       AND ((email IS NOT NULL AND emailed_at IS NULL) OR (phone IS NOT NULL AND sms_sent_at IS NULL))`,
+       AND ((email IS NOT NULL AND emailed_at IS NULL) OR (phone IS NOT NULL AND sms_consent_at IS NOT NULL AND sms_sent_at IS NULL))`,
     [player.id],
   );
   let sent = 0;
   let waiting = 0;
   for (const c of rows as Contact[]) {
     const needsEmail = c.email && !c.emailed_at;
-    const needsSms = c.phone && !c.sms_sent_at;
+    const needsSms = c.phone && c.sms_consent_at && !c.sms_sent_at;
     const canEmail = needsEmail && emailEnabled();
     const canSms = needsSms && smsEnabled();
     if (!canEmail && !canSms) {

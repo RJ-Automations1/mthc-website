@@ -192,5 +192,9 @@ export function smsFor(m: MessageInput, automated: boolean) {
       : m.kind === 'reminder'
         ? `Hi ${greetName(m.contactName)}, friendly reminder${automated ? ` from ${p}'s Morehouse Baseball fundraiser` : ` — it's ${p}`}! Any amount helps: ${m.link}`
         : `Last chance! ${automated ? `${p}'s` : 'My'} Morehouse Baseball fundraiser ends ${m.endDate}: ${m.link}`;
-  return automated ? `MTHC: ${body} Reply STOP to opt out.` : body;
+  if (!automated) return body;
+  // First text carries the full disclosure carriers expect; later ones just STOP.
+  return m.kind === 'invite'
+    ? `MTHC: ${body} Msg & data rates may apply. Reply HELP for help, STOP to opt out.`
+    : `MTHC: ${body} Reply STOP to opt out.`;
 }

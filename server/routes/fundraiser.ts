@@ -286,7 +286,7 @@ router.post('/inbox/:slug/contacts', async (req, res) => {
   const list = Array.isArray(req.body?.contacts) ? req.body.contacts.slice(0, 300) : [];
   if (!list.length) return res.status(400).json({ message: 'Add at least one person.' });
   try {
-    res.json({ ok: true, ...(await addContacts(player.id, list)) });
+    res.json({ ok: true, ...(await addContacts(player.id, list, req.body?.smsConsent === true)) });
   } catch (e) {
     if (e instanceof ContactError) return res.status(400).json({ message: e.message });
     console.error('Add contacts failed', e);

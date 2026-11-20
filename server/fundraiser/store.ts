@@ -115,6 +115,7 @@ export async function db() {
            created_at TIMESTAMPTZ NOT NULL DEFAULT now()
          );
          CREATE INDEX IF NOT EXISTS fundraiser_contacts_player ON fundraiser_contacts (player_id);
+         ALTER TABLE fundraiser_contacts ADD COLUMN IF NOT EXISTS sms_consent_at TIMESTAMPTZ;
          ALTER TABLE fundraiser_gifts ADD COLUMN IF NOT EXISTS contact_id INTEGER REFERENCES fundraiser_contacts(id) ON DELETE SET NULL;`,
       )
       .then(() => seedRoster(p))

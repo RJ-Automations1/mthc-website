@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { BadgeCheck, Eye, Mail, MessageSquare, Plus, Send, Trash2, UserX } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { api } from './shared';
 
 export interface ContactRow {
@@ -7,6 +8,7 @@ export interface ContactRow {
   name: string;
   email: string | null;
   phone: string | null;
+  smsConsent: boolean;
   link: string;
   emailed: boolean;
   texted: boolean;
@@ -73,6 +75,7 @@ export default function SupportersPanel(props: Props) {
   const [phone, setPhone] = useState('');
   const [bulk, setBulk] = useState('');
   const [showBulk, setShowBulk] = useState(false);
+  const [consent, setConsent] = useState(false);
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
@@ -85,15 +88,19 @@ export default function SupportersPanel(props: Props) {
   const donated = contacts.filter((c) => c.donated).length;
   const notYet = contacts.filter((c) => !c.donated && !c.optedOut).length;
   const toEmail = contacts.filter((c) => c.email && !c.emailed && !c.donated && !c.optedOut).length;
-  const toAutoText = props.smsEnabled ? contacts.filter((c) => c.phone && !c.texted && !c.donated && !c.optedOut).length : 0;
+  const toAutoText = props.smsEnabled ? contacts.filter((c) => c.phone && c.smsConsent && !c.texted && !c.donated && !c.optedOut).length : 0;
   const readyToSend = (props.emailEnabled ? toEmail : 0) + toAutoText;
 
   async function add(list: { name: string; email?: string; phone?: string }[]) {
     setErr('');
     setMsg('');
+    if (!consent && list.some((c) => c.phone)) {
+      setErr('Check the box below to confirm the people you’re adding agreed to get texts from MTHC.');
+      return false;
+    }
     setBusy(true);
     try {
-      const r = await api<{ added: string[]; skipped: string[] }>(`/api/fundraiser/inbox/${slug}/contacts`, { method: 'POST', headers, json: { contacts: list } });
+      const r = await api<{ added: string[]; skipped: string[] }>(`/api/fundraiser/inbox/${slug}/contacts`, { method: 'POST', headers, json: { contacts: list, smsConsent: consent } });
       setMsg(`Added ${r.added.length}.${r.skipped.length ? ` Skipped: ${r.skipped.join('; ')}` : ''}`);
       props.onChange();
       return r.added.length > 0;
@@ -221,6 +228,14 @@ export default function SupportersPanel(props: Props) {
             <button type="button" onClick={addBulk} disabled={busy} className="btn-secondary !py-2 text-sm">Add everyone</button>
           </div>
         )}
+        <label className="flex items-start gap-2 text-xs text-gray-600 leading-relaxed">
+          <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 accent-maroon shrink-0" />
+          <span>
+            Everyone I add with a phone number told me they agree to get texts from the Maroon Tiger Homerun Club (MTHC) about my
+            fundraiser: an invitation and up to 3 reminders, ending {props.endDate}. Msg &amp; data rates may apply. They can reply
+            STOP to opt out or HELP for help. <Link to="/fundraiser/texts" className="text-maroon underline">Text policy</Link>
+          </span>
+        </label>
         {err && <p className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{err}</p>}
         {msg && <p className="p-3 rounded-lg bg-gold/20 text-sm">{msg}</p>}
 
