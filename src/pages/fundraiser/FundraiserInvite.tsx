@@ -26,6 +26,8 @@ export default function FundraiserInvite() {
   const [loadError, setLoadError] = useState('');
   const [params] = useSearchParams();
   const fromTeamPage = params.get('open') === '1';
+  const contactRef = params.get('c') || '';
+  const [guest, setGuest] = useState('');
   const [opened, setOpened] = useState(fromTeamPage);
 
   const [amount, setAmount] = useState<number | null>(50);
@@ -41,6 +43,14 @@ export default function FundraiserInvite() {
   const first = page?.name.split(/\s+/)[0] ?? '';
   useTitle(page ? `Support ${page.name}` : 'Fundraiser');
 
+  // Personal invitation link: note the visit and greet them by name
+  useEffect(() => {
+    if (!contactRef) return;
+    api<{ firstName: string }>(`/api/fundraiser/c/${encodeURIComponent(contactRef)}/visit`, { method: 'POST' })
+      .then((r) => setGuest(r.firstName))
+      .catch(() => undefined);
+  }, [contactRef]);
+
   useEffect(() => {
     api<PlayerPage>(`/api/fundraiser/p/${encodeURIComponent(slug)}`).then(setPage).catch((e) => setLoadError(e.message));
   }, [slug]);
@@ -55,7 +65,7 @@ export default function FundraiserInvite() {
     try {
       const r = await api<{ ref: string; payUrl: string; exactAmount: boolean; amount: number }>(
         `/api/fundraiser/p/${encodeURIComponent(slug)}/give`,
-        { method: 'POST', json: { amount: total, name, email, note, anonymous } },
+        { method: 'POST', json: { amount: total, name, email, note, anonymous, contact: contactRef || undefined } },
       );
       // Let the envelope seal before heading to Square
       await new Promise((res) => setTimeout(res, 900));
@@ -97,7 +107,7 @@ export default function FundraiserInvite() {
           {fromTeamPage && (
             <Link to="/fundraiser" className="mb-5 block text-sm text-white/70 hover:text-gold">← Pick a different player</Link>
           )}
-          <p className="eyebrow text-gold">{fromTeamPage ? 'Give & leave a note' : 'You’re invited'}</p>
+          <p className="eyebrow text-gold">{fromTeamPage ? 'Give & leave a note' : guest ? `${guest}, you’re invited` : 'You’re invited'}</p>
           <h1 className="mt-2 font-display uppercase font-bold text-white text-4xl md:text-5xl leading-[0.95]">
             {page ? <>{page.name} needs your support</> : 'Loading…'}
           </h1>

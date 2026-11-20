@@ -29,6 +29,10 @@ import FundraiserInvite from './pages/fundraiser/FundraiserInvite';
 import FundraiserThanks from './pages/fundraiser/FundraiserThanks';
 import FundraiserInbox from './pages/fundraiser/FundraiserInbox';
 import FundraiserAdmin from './pages/fundraiser/FundraiserAdmin';
+import FundraiserPlayers from './pages/fundraiser/FundraiserPlayers';
+import FundraiserStop from './pages/fundraiser/FundraiserStop';
+import FundraiserTexts from './pages/fundraiser/FundraiserTexts';
+import { Privacy, Terms } from './pages/Legal';
 import { IS_JEBI_SITE } from './lib/siteMode';
 
 /** The nine JEBI pages, mounted under whatever base path the build uses. */
@@ -91,6 +95,11 @@ function MthcSite() {
           {/* Player fundraiser: invite links, private envelope mailboxes, admin */}
           <Route path="/fundraiser" element={<FundraiserJoin />} />
           <Route path="/fundraiser/admin" element={<FundraiserAdmin />} />
+          <Route path="/fundraiser/players" element={<FundraiserPlayers />} />
+          <Route path="/fundraiser/stop/:ref" element={<FundraiserStop />} />
+          <Route path="/fundraiser/texts" element={<FundraiserTexts />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
           <Route path="/fundraiser/:slug" element={<FundraiserInvite />} />
           <Route path="/fundraiser/:slug/thanks/:ref" element={<FundraiserThanks />} />
           <Route path="/fundraiser/:slug/inbox" element={<FundraiserInbox />} />

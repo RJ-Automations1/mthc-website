@@ -3,7 +3,6 @@ import crypto from 'crypto';
 import { createCheckout, isPaid, squareEnabled } from '../jebi/squareCheckout';
 import {
   adminReport,
-  rosterWithTotals,
   createGift,
   createPlayer,
   deletePlayer,
@@ -20,7 +19,30 @@ import {
   storeAvailable,
   updatePlayer,
   type GiftStatus,
+  clearPin,
+  pinMatches,
+  rosterWithTotals,
+  setFirstPin,
 } from '../fundraiser/store';
+import {
+  ContactError,
+  addContacts,
+  allContactsForExport,
+  contactView,
+  endDateLabel,
+  fundraiserOver,
+  getContact,
+  listContacts,
+  markTexted,
+  markVisited,
+  onGiftPaid,
+  outreachReport,
+  removeContact,
+  runFollowUps,
+  sendInvites,
+  unsubscribe,
+} from '../fundraiser/outreach';
+import { emailConfigured, emailEnabled, greetName, sendingOn, smsConfigured, smsEnabled } from '../fundraiser/messaging';
 
 /**
  * Player fundraiser API.
@@ -135,7 +157,10 @@ router.post('/p/:slug/give', async (req, res) => {
   try {
     const player = await getPlayer(String(req.params.slug));
     if (!player) return res.status(404).json({ message: 'We couldn’t find that fundraiser link.' });
-    const ref = await createGift({ playerId: player.id, amount, donorName: name, donorEmail: email, note, anonymous });
+    const contactRef = clean(req.body?.contact, 16);
+    const contact = contactRef ? await getContact(contactRef).catch(() => null) : null;
+    const contactId = contact && contact.player_id === player.id ? contact.id : null;
+    const ref = await createGift({ playerId: player.id, amount, donorName: name, donorEmail: email, note, anonymous, contactId });
 
     let payUrl = STATIC_PAY_URL;
     let exactAmount = false;
@@ -171,6 +196,7 @@ async function syncGift(ref: string) {
     if (await isPaid(g.square_order_id, g.amount).catch(() => false)) {
       await setGiftStatus(g.ref, 'paid');
       g.status = 'paid';
+      await onGiftPaid(g.ref).catch((e) => console.error('Gift follow-through failed', e));
     }
   }
   return g;
@@ -210,7 +236,14 @@ router.get('/inbox/:slug', async (req, res) => {
       slug: player.slug,
       goal: player.goal,
       blurb: player.blurb,
+      email: player.email,
+      number: player.number,
       ...totals,
+      emailEnabled: emailEnabled(),
+      smsEnabled: smsEnabled(),
+      endDate: endDateLabel(),
+      over: fundraiserOver(),
+      contacts: (await listContacts(player.id)).map((c) => contactView(c, player.slug)),
       shareUrl: `${siteOrigin(req)}/fundraiser/${player.slug}`,
       envelopes: gifts.map((g) => ({
         ref: g.ref,
@@ -240,7 +273,104 @@ router.patch('/inbox/:slug', async (req, res) => {
   const goal = req.body?.goal === undefined ? undefined : wholeDollars(req.body.goal);
   if (goal !== undefined && !(goal >= 50 && goal <= 100000)) return res.status(400).json({ message: 'Pick a goal between $50 and $100,000.' });
   const blurb = req.body?.blurb === undefined ? undefined : clean(req.body.blurb, 400);
-  await updatePlayer(player.id, { goal, blurb });
+  const email = req.body?.email === undefined ? undefined : clean(req.body.email, 200).toLowerCase();
+  if (email && !isEmail(email)) return res.status(400).json({ message: 'That email address doesn’t look right.' });
+  await updatePlayer(player.id, { goal, blurb, email });
+  res.json({ ok: true });
+});
+
+// ── Player outreach (contacts they want invited) ─────────────────────────────
+router.post('/inbox/:slug/contacts', async (req, res) => {
+  const player = await requirePlayer(req, res);
+  if (!player) return;
+  const list = Array.isArray(req.body?.contacts) ? req.body.contacts.slice(0, 300) : [];
+  if (!list.length) return res.status(400).json({ message: 'Add at least one person.' });
+  try {
+    res.json({ ok: true, ...(await addContacts(player.id, list, req.body?.smsConsent === true)) });
+  } catch (e) {
+    if (e instanceof ContactError) return res.status(400).json({ message: e.message });
+    console.error('Add contacts failed', e);
+    res.status(500).json({ message: 'Could not save your list. Please try again.' });
+  }
+});
+
+router.delete('/inbox/:slug/contacts/:ref', async (req, res) => {
+  const player = await requirePlayer(req, res);
+  if (!player) return;
+  await removeContact(player.id, String(req.params.ref)).catch(() => undefined);
+  res.json({ ok: true });
+});
+
+router.post('/inbox/:slug/contacts/:ref/texted', async (req, res) => {
+  const player = await requirePlayer(req, res);
+  if (!player) return;
+  await markTexted(player.id, String(req.params.ref)).catch(() => undefined);
+  res.json({ ok: true });
+});
+
+router.post('/inbox/:slug/send-invites', async (req, res) => {
+  const player = await requirePlayer(req, res);
+  if (!player) return;
+  if (throttled(`invite:${player.id}`, 6, 60 * 60 * 1000)) return res.status(429).json({ message: 'Please wait a bit before sending again.' });
+  try {
+    res.json({ ok: true, ...(await sendInvites(player)) });
+  } catch (e) {
+    console.error('Send invites failed', e);
+    res.status(500).json({ message: 'Could not send invitations. Please try again.' });
+  }
+});
+
+// ── Player sign-in: pick your name, then your PIN (set it the first time) ────
+router.get('/players', async (_req, res) => {
+  if (noDb(res)) return;
+  try {
+    const players = await rosterWithTotals();
+    res.json({ players: players.map((p: any) => ({ slug: p.slug, name: p.name, number: p.number, photo: p.photo })) });
+  } catch (e) {
+    console.error('Player list failed', e);
+    res.status(500).json({ message: 'Could not load the team.' });
+  }
+});
+
+router.post('/players/status', async (req, res) => {
+  if (noDb(res)) return;
+  const player = await getPlayer(clean(req.body?.slug, 60)).catch(() => null);
+  if (!player) return res.status(404).json({ message: 'Pick your name from the list.' });
+  res.json({ hasPin: Boolean(player.pin_hash), name: player.name });
+});
+
+router.post('/players/login', async (req, res) => {
+  if (noDb(res)) return;
+  const slug = clean(req.body?.slug, 60);
+  if (throttled(`login:${ipOf(req)}`, 15, 15 * 60 * 1000) || throttled(`login:${slug}`, 8, 15 * 60 * 1000)) {
+    return res.status(429).json({ message: 'Too many tries. Wait 15 minutes, or ask your coach to reset your PIN.' });
+  }
+  const pin = clean(req.body?.pin, 10);
+  if (!/^\d{4,6}$/.test(pin)) return res.status(400).json({ message: 'Your PIN is 4 to 6 numbers.' });
+  const player = await getPlayer(slug).catch(() => null);
+  if (!player) return res.status(404).json({ message: 'Pick your name from the list.' });
+  if (!player.pin_hash) {
+    if (!(await setFirstPin(player.id, pin))) return res.status(409).json({ message: 'A PIN was just set for this name. Enter it, or ask your coach to reset it.' });
+  } else if (!pinMatches(pin, player.pin_hash)) {
+    return res.status(401).json({ message: 'That PIN isn’t right. Ask your coach to reset it if you forgot.' });
+  }
+  res.json({ ok: true, slug: player.slug, key: player.portal_key });
+});
+
+// ── Contact link tracking + opt-out (public) ─────────────────────────────────
+router.post('/c/:ref/visit', async (req, res) => {
+  if (noDb(res)) return;
+  if (throttled(`visit:${ipOf(req)}`, 60, 10 * 60 * 1000)) return res.status(429).json({});
+  const c = await getContact(String(req.params.ref)).catch(() => null);
+  if (!c) return res.status(404).json({});
+  await markVisited(c.ref).catch(() => undefined);
+  res.json({ ok: true, firstName: greetName(c.name) });
+});
+
+router.post('/stop/:ref', async (req, res) => {
+  if (noDb(res)) return;
+  const ok = await unsubscribe(String(req.params.ref)).catch(() => false);
+  if (!ok) return res.status(404).json({ message: 'Link not found.' });
   res.json({ ok: true });
 });
 
@@ -261,10 +391,16 @@ function requireAdmin(req: any, res: any) {
 router.get('/admin', async (req, res) => {
   if (!requireAdmin(req, res)) return;
   try {
-    const report = await adminReport();
+    const [report, outreach] = await Promise.all([adminReport(), outreachReport()]);
     const origin = siteOrigin(req);
     res.json({
       squareConnected: squareEnabled(),
+      emailEnabled: emailEnabled(),
+      smsEnabled: smsEnabled(),
+      sendingOn: sendingOn(),
+      emailConfigured: emailConfigured(),
+      smsConfigured: smsConfigured(),
+      endDate: endDateLabel(),
       players: report.players.map((p: any) => ({
         slug: p.slug,
         name: p.name,
@@ -274,6 +410,8 @@ router.get('/admin', async (req, res) => {
         raised: p.raised,
         gifts: p.gifts,
         pending: p.pending,
+        hasPin: Boolean(p.pin_hash),
+        outreach: outreach.get(p.id) ?? { contacts: 0, invited: 0, visited: 0, donated: 0, opted_out: 0 },
         shareUrl: `${origin}/fundraiser/${p.slug}`,
         inboxUrl: `${origin}/fundraiser/${p.slug}/inbox?key=${encodeURIComponent(p.portal_key)}`,
       })),
@@ -303,6 +441,26 @@ router.post('/admin/players/:slug/reset-key', async (req, res) => {
   res.json({ ok: true, ...linksFor(req, player.slug, key) });
 });
 
+router.post('/admin/players/:slug/reset-pin', async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const player = await getPlayer(String(req.params.slug));
+  if (!player) return res.status(404).json({ message: 'Player not found.' });
+  await clearPin(player.id);
+  res.json({ ok: true });
+});
+
+router.get('/admin/contacts', async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  res.json({ contacts: await allContactsForExport() });
+});
+
+router.post('/admin/followups/run', async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  if (!sendingOn()) return res.status(503).json({ message: 'Sending is OFF (FUNDRAISER_SENDING is not "on"). Nothing was sent.' });
+  if (!emailEnabled() && !smsEnabled()) return res.status(503).json({ message: 'Email and texting are not set up yet.' });
+  res.json({ ok: true, ...(await runFollowUps(new Date(), { ignoreQuietHours: true })) });
+});
+
 router.delete('/admin/players/:slug', async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const player = await getPlayer(String(req.params.slug));
@@ -315,8 +473,10 @@ router.post('/admin/gifts/:ref/status', async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const status = String(req.body?.status || '') as GiftStatus;
   if (!['pending', 'paid', 'cancelled'].includes(status)) return res.status(400).json({ message: 'Invalid status.' });
+  const before = await getGift(String(req.params.ref)).catch(() => null);
   const ok = await setGiftStatus(String(req.params.ref), status).catch(() => false);
   if (!ok) return res.status(404).json({ message: 'Gift not found.' });
+  if (status === 'paid' && before?.status !== 'paid') await onGiftPaid(String(req.params.ref)).catch((e) => console.error('Gift follow-through failed', e));
   res.json({ ok: true });
 });
 

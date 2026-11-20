@@ -14,6 +14,7 @@ import boardRoutes from './routes/board';
 import historyRoutes from './routes/history';
 import jebiShopRoutes from './routes/jebiShop';
 import fundraiserRoutes from './routes/fundraiser';
+import { startFollowUpScheduler } from './fundraiser/outreach';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -59,6 +60,7 @@ async function start() {
       console.error('⚠️  Database init failed (site will still serve):', err);
     }
   }
+  startFollowUpScheduler();
   app.listen(PORT, () => {
     console.log(`🏟️  MTHC Server running on port ${PORT}`);
     console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Check, Copy, Mail, MessageSquare, Share2, X } from 'lucide-react';
+import SupportersPanel, { type ContactRow } from './SupportersPanel';
 import { Envelope, HeaderBacker, ProgressBar, api, inviteMessage, money, useTitle } from './shared';
 
 interface EnvelopeItem {
@@ -21,6 +22,12 @@ interface InboxData {
   gifts: number;
   shareUrl: string;
   envelopes: EnvelopeItem[];
+  email: string | null;
+  contacts: ContactRow[];
+  emailEnabled: boolean;
+  smsEnabled: boolean;
+  endDate: string;
+  over: boolean;
 }
 
 const KEY_STORE = 'mthc-fundraiser-key:';
@@ -43,13 +50,20 @@ export default function FundraiserInbox() {
   const [opening, setOpening] = useState<string | null>(null);
   const [reading, setReading] = useState<EnvelopeItem | null>(null);
   const [copied, setCopied] = useState(false);
-  useTitle(data ? `${data.name}'s envelopes` : 'My envelopes');
+  useTitle(data ? `${data.name}'s portal` : 'Player portal');
 
   const load = useCallback(() => {
-    if (!key) return setError('This page needs your private link. Ask your coach for it.');
+    if (!key) return setError('Please sign in to your player portal.');
     api<InboxData>(`/api/fundraiser/inbox/${encodeURIComponent(slug)}`, { headers: { 'x-portal-key': key } })
       .then(setData)
-      .catch((e) => setError(e.message));
+      .catch((e) => {
+        try {
+          localStorage.removeItem(KEY_STORE + slug);
+        } catch {
+          /* ignore */
+        }
+        setError(e.message);
+      });
   }, [key, slug]);
 
   useEffect(() => {
@@ -80,8 +94,9 @@ export default function FundraiserInbox() {
       <>
         <HeaderBacker />
         <section className="pt-36 pb-24 text-center px-4">
-          <h1 className="section-heading">Private link needed</h1>
+          <h1 className="section-heading">Sign in to your portal</h1>
           <p className="text-gray-600 max-w-md mx-auto">{error}</p>
+          <Link to="/fundraiser/players" className="btn-primary mt-6 uppercase tracking-wider text-sm">Go to player sign-in</Link>
         </section>
       </>
     );
@@ -90,7 +105,7 @@ export default function FundraiserInbox() {
     return (
       <>
         <HeaderBacker />
-        <p className="pt-36 pb-24 text-center text-gray-500">Loading your envelopes…</p>
+        <p className="pt-36 pb-24 text-center text-gray-500">Loading your portal…</p>
       </>
     );
   }
@@ -124,10 +139,10 @@ export default function FundraiserInbox() {
           <header>
             <p className="eyebrow text-maroon">Private · only you can see this page</p>
             <h1 className="mt-1 font-display uppercase font-bold text-ink text-4xl md:text-6xl leading-[0.95]">
-              {first}’s envelopes
+              {first}’s portal
             </h1>
             <p className="mt-2 text-gray-600">
-              {unopened > 0 ? `You have ${unopened} new envelope${unopened === 1 ? '' : 's'} to open!` : 'Bookmark this page — new envelopes land here as people give.'}
+              {unopened > 0 ? `You have ${unopened} new envelope${unopened === 1 ? '' : 's'} to open!` : 'Add your supporters below — we send your invitations and follow up for you.'}
             </p>
           </header>
 
@@ -193,6 +208,20 @@ export default function FundraiserInbox() {
               </ul>
             )}
           </div>
+
+          <SupportersPanel
+            slug={data.slug}
+            portalKey={key}
+            playerName={data.name}
+            blurb={data.blurb}
+            email={data.email}
+            contacts={data.contacts}
+            emailEnabled={data.emailEnabled}
+            smsEnabled={data.smsEnabled}
+            endDate={data.endDate}
+            over={data.over}
+            onChange={load}
+          />
         </div>
       </section>
 

@@ -13,6 +13,8 @@ interface AdminPlayer {
   pending: number;
   shareUrl: string;
   inboxUrl: string;
+  hasPin: boolean;
+  outreach: { contacts: number; invited: number; visited: number; donated: number; opted_out: number };
 }
 interface AdminGift {
   ref: string;
@@ -28,6 +30,12 @@ interface AdminGift {
 }
 interface Report {
   squareConnected: boolean;
+  emailEnabled: boolean;
+  smsEnabled: boolean;
+  sendingOn: boolean;
+  emailConfigured: boolean;
+  smsConfigured: boolean;
+  endDate: string;
   players: AdminPlayer[];
   gifts: AdminGift[];
 }
@@ -107,6 +115,36 @@ export default function FundraiserAdmin() {
     await call(`/players/${p.slug}`, { method: 'DELETE' }).catch((e) => setMsg(e.message));
     load();
   }
+  async function resetPin(p: AdminPlayer) {
+    if (!confirm(`Reset ${p.name}'s PIN? They'll create a new one the next time they sign in.`)) return;
+    await call(`/players/${p.slug}/reset-pin`, { method: 'POST' }).catch((e) => setMsg(e.message));
+    setMsg(`${p.name} can now set a new PIN.`);
+    load();
+  }
+  async function runFollowUps() {
+    try {
+      const r = await call<{ sent: number }>('/followups/run', { method: 'POST' });
+      setMsg(`Sent ${r.sent} follow-up${r.sent === 1 ? '' : 's'} that were due.`);
+      load();
+    } catch (e: any) {
+      setMsg(e.message);
+    }
+  }
+  async function contactsCsv() {
+    try {
+      const { contacts } = await call<{ contacts: Record<string, any>[] }>('/contacts');
+      const cols = ['player', 'name', 'email', 'phone', 'emailed_at', 'texted_at', 'sms_sent_at', 'visited_at', 'donated_at', 'followups', 'unsubscribed_at', 'send_error', 'created_at'];
+      const text = [cols.join(',')]
+        .concat(contacts.map((c) => cols.map((k) => `"${String(c[k] ?? '').replace(/"/g, '""')}"`).join(',')))
+        .join('\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv' }));
+      a.download = 'mthc-fundraiser-contacts.csv';
+      a.click();
+    } catch (e: any) {
+      setMsg(e.message);
+    }
+  }
   const copy = (t: string) => navigator.clipboard?.writeText(t).then(() => setMsg('Copied.'));
 
   if (!report) {
@@ -155,12 +193,21 @@ export default function FundraiserAdmin() {
                 {money(totalRaised)} raised · {report.players.length} players ·{' '}
                 Square {report.squareConnected ? 'connected (gifts confirm automatically)' : 'NOT connected — mark gifts paid by hand'}
               </p>
+              <p className="text-gray-600 text-sm">
+                <strong className={report.sendingOn ? 'text-green-700' : 'text-red-700'}>Sending {report.sendingOn ? 'ON' : 'OFF — nothing is emailed or texted'}</strong> ·{' '}
+                Email {report.emailConfigured ? 'connected' : 'not connected'} · Auto-texts {report.smsConfigured ? 'connected' : 'not connected'} · Ends {report.endDate} ·{' '}
+                Player portal link: <button className="text-maroon hover:underline" onClick={() => copy(`${window.location.origin}/fundraiser/players`)}>copy</button>
+              </p>
             </div>
             <div className="flex gap-2">
               {report.squareConnected && (
                 <button onClick={sync} className="btn-secondary !py-2 text-sm"><RefreshCw className="w-4 h-4" /> Check Square</button>
               )}
-              <button onClick={csv} className="btn-secondary !py-2 text-sm">Download CSV</button>
+              {(report.emailEnabled || report.smsEnabled) && (
+                <button onClick={runFollowUps} className="btn-secondary !py-2 text-sm">Send due follow-ups</button>
+              )}
+              <button onClick={csv} className="btn-secondary !py-2 text-sm">Gifts CSV</button>
+              <button onClick={contactsCsv} className="btn-secondary !py-2 text-sm">Contacts CSV</button>
             </div>
           </div>
           {msg && <p className="p-3 rounded-lg bg-gold/20 text-sm">{msg}</p>}
@@ -180,7 +227,7 @@ export default function FundraiserAdmin() {
           <div className="card hover:translate-y-0 overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
-                <tr><th className="p-3">Player</th><th className="p-3">Raised</th><th className="p-3">Gifts</th><th className="p-3">Links</th><th className="p-3"></th></tr>
+                <tr><th className="p-3">Player</th><th className="p-3">Raised</th><th className="p-3">Gifts</th><th className="p-3">Outreach</th><th className="p-3">Links</th><th className="p-3"></th></tr>
               </thead>
               <tbody>
                 {report.players.map((p) => (
@@ -188,11 +235,23 @@ export default function FundraiserAdmin() {
                     <td className="p-3 font-semibold">{p.number && <span className="text-maroon">#{p.number} </span>}{p.name}</td>
                     <td className="p-3">{money(p.raised)} / {money(p.goal)}</td>
                     <td className="p-3">{p.gifts}{p.pending ? <span className="text-amber-600"> (+{p.pending} pending)</span> : null}</td>
+                    <td className="p-3 text-xs whitespace-nowrap">
+                      {p.outreach.contacts ? (
+                        <>
+                          {p.outreach.contacts} listed · {p.outreach.invited} invited<br />
+                          {p.outreach.visited} opened · <span className="text-green-700 font-semibold">{p.outreach.donated} gave</span>
+                          {p.outreach.opted_out ? ` · ${p.outreach.opted_out} opted out` : ''}
+                        </>
+                      ) : (
+                        <span className="text-gray-400">{p.hasPin ? 'Signed in, no list yet' : 'Not signed in yet'}</span>
+                      )}
+                    </td>
                     <td className="p-3 space-x-2 whitespace-nowrap">
                       <button className="text-maroon hover:underline" onClick={() => copy(p.shareUrl)}>Copy invite link</button>
                       <button className="text-maroon hover:underline" onClick={() => copy(p.inboxUrl)}>Copy private mailbox</button>
                     </td>
                     <td className="p-3 space-x-2 whitespace-nowrap text-xs">
+                      {p.hasPin && <button className="text-gray-500 hover:underline" onClick={() => resetPin(p)}>Reset PIN</button>}
                       <button className="text-gray-500 hover:underline" onClick={() => resetKey(p.slug)}>New mailbox link</button>
                       <button className="text-red-600 hover:underline" onClick={() => remove(p)}>Delete</button>
                     </td>
