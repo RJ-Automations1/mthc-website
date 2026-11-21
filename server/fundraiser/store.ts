@@ -133,6 +133,14 @@ const DEFAULT_GOAL = Number(process.env.FUNDRAISER_DEFAULT_GOAL) || 500;
 /** Gives every roster player a page (once). Existing pages keep their goal, links and gifts. */
 async function seedRoster(p: pg.Pool) {
   for (const r of FUNDRAISER_ROSTER) {
+    // Renamed player: move their existing page (goal, gifts, contacts) to the new name.
+    if (r.was) {
+      await p.query(
+        `UPDATE fundraiser_players SET slug = $2, name = $3
+         WHERE slug = $1 AND NOT EXISTS (SELECT 1 FROM fundraiser_players WHERE slug = $2)`,
+        [slugify(r.was), slugify(r.name), r.name],
+      );
+    }
     await p.query(
       `INSERT INTO fundraiser_players (slug, name, goal, portal_key, number, position, class_year, photo)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
