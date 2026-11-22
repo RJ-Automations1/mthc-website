@@ -173,7 +173,8 @@ function messageFor(kind: MessageKind, c: Contact, player: Player) {
     contactName: c.name,
     playerName: player.name,
     playerNumber: player.number,
-    playerPhoto: player.photo,
+    // Emails need a full URL; our own photos are stored as /images/... paths
+    playerPhoto: player.photo?.startsWith('/') ? `${SITE_URL}${player.photo}` : player.photo,
     personalNote: player.blurb,
     link: contactLink(player.slug, c.ref),
     unsubscribeUrl: stopLink(c.ref),
