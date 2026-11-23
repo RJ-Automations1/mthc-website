@@ -12,6 +12,7 @@ const navigation = [
   { name: 'Schedule', href: '/schedule' },
   { name: 'Leaderboard', href: '/leaderboard' },
   { name: 'Board', href: '/board' },
+  { name: 'Fundraiser', href: '/fundraiser' },
 ];
 
 /**

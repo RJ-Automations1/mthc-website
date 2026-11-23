@@ -131,7 +131,12 @@ export default function Footer() {
 
         <div className="mt-14 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between gap-2 text-white/45 text-xs">
           <p>&copy; {new Date().getFullYear()} Maroon Tiger Homerun Club. All rights reserved.</p>
-          <p>Supporting Morehouse College Baseball Since 1867</p>
+          <p className="flex flex-wrap gap-x-4 gap-y-1">
+            <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+            <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
+            <Link to="/fundraiser/texts" className="hover:text-white transition-colors">Text messages</Link>
+            <span>Supporting Morehouse College Baseball Since 1867</span>
+          </p>
         </div>
       </div>
     </footer>
