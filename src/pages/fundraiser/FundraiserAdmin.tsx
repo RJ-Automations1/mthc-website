@@ -57,7 +57,7 @@ export default function FundraiserAdmin() {
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
   const [newName, setNewName] = useState('');
-  const [newGoal, setNewGoal] = useState('500');
+  const [newGoal, setNewGoal] = useState('2000');
 
   const call = useCallback(
     <T,>(path: string, init?: RequestInit & { json?: unknown }) =>

@@ -128,7 +128,7 @@ export async function db() {
   return p;
 }
 
-const DEFAULT_GOAL = Number(process.env.FUNDRAISER_DEFAULT_GOAL) || 500;
+export const DEFAULT_GOAL = Number(process.env.FUNDRAISER_DEFAULT_GOAL) || 2000;
 
 /** Gives every roster player a page (once). Existing pages keep their goal, links and gifts. */
 async function seedRoster(p: pg.Pool) {
@@ -200,6 +200,13 @@ export async function getPlayer(slug: string) {
   const p = await db();
   const { rows } = await p.query(`SELECT * FROM fundraiser_players WHERE slug = $1`, [slug.toLowerCase()]);
   return (rows[0] as Player | undefined) ?? null;
+}
+
+/** Sets every player's goal at once (admin). Returns how many changed. */
+export async function setAllGoals(goal: number) {
+  const p = await db();
+  const r = await p.query(`UPDATE fundraiser_players SET goal = $1 WHERE goal <> $1`, [goal]);
+  return r.rowCount ?? 0;
 }
 
 export async function updatePlayer(id: number, fields: { blurb?: string | null; goal?: number; email?: string | null }) {
