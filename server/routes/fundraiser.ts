@@ -18,6 +18,8 @@ import {
   setGiftStatus,
   storeAvailable,
   updatePlayer,
+  setAllGoals,
+  DEFAULT_GOAL,
   type GiftStatus,
   clearPin,
   pinMatches,
@@ -53,7 +55,7 @@ import { emailConfigured, emailEnabled, greetName, sendingOn, smsConfigured, sms
  *   GET  /api/fundraiser/gifts/:ref              donor's return page: confirms payment with Square
  *   GET  /api/fundraiser/inbox/:slug             player's envelopes            (header x-portal-key)
  *   POST /api/fundraiser/inbox/:slug/open/:ref   mark an envelope opened       (x-portal-key)
- *   PATCH /api/fundraiser/inbox/:slug            player edits goal/blurb       (x-portal-key)
+ *   PATCH /api/fundraiser/inbox/:slug            player edits note/email       (x-portal-key)
  *   GET  /api/fundraiser/admin                   every player + gift           (x-admin-key)
  *   POST /api/fundraiser/admin/players           add a player                  (x-admin-key)
  *   POST /api/fundraiser/admin/players/:slug/reset-key | DELETE …/players/:slug
@@ -61,7 +63,7 @@ import { emailConfigured, emailEnabled, greetName, sendingOn, smsConfigured, sms
  *   POST /api/fundraiser/admin/sync              re-check Square for pending gifts
  *
  * Render env:
- *   FUNDRAISER_DEFAULT_GOAL starting goal for roster players (default 500)
+ *   FUNDRAISER_DEFAULT_GOAL starting goal for roster players (default 2000)
  *   FUNDRAISER_ADMIN_KEY   admin password (falls back to JEBI_ADMIN_KEY)
  *   SQUARE_ACCESS_TOKEN + SQUARE_LOCATION_ID — already set for the JEBI shop; gives
  *   every gift an exact-amount Square checkout. Without them donors use the static
@@ -270,12 +272,11 @@ router.post('/inbox/:slug/open/:ref', async (req, res) => {
 router.patch('/inbox/:slug', async (req, res) => {
   const player = await requirePlayer(req, res);
   if (!player) return;
-  const goal = req.body?.goal === undefined ? undefined : wholeDollars(req.body.goal);
-  if (goal !== undefined && !(goal >= 50 && goal <= 100000)) return res.status(400).json({ message: 'Pick a goal between $50 and $100,000.' });
+  // Goals are set by MTHC (admin) — players can't change theirs.
   const blurb = req.body?.blurb === undefined ? undefined : clean(req.body.blurb, 400);
   const email = req.body?.email === undefined ? undefined : clean(req.body.email, 200).toLowerCase();
   if (email && !isEmail(email)) return res.status(400).json({ message: 'That email address doesn’t look right.' });
-  await updatePlayer(player.id, { goal, blurb, email });
+  await updatePlayer(player.id, { blurb, email });
   res.json({ ok: true });
 });
 
@@ -427,10 +428,18 @@ router.post('/admin/players', async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const name = clean(req.body?.name, 120);
   if (name.length < 2) return res.status(400).json({ message: 'Enter the player’s name.' });
-  const goal = wholeDollars(req.body?.goal || 500);
+  const goal = wholeDollars(req.body?.goal || DEFAULT_GOAL);
   if (!(goal >= 50 && goal <= 100000)) return res.status(400).json({ message: 'Pick a goal between $50 and $100,000.' });
   const player = await createPlayer({ name, goal, email: clean(req.body?.email, 200) || null, blurb: clean(req.body?.blurb, 400) || null });
   res.status(201).json({ ok: true, slug: player.slug, ...linksFor(req, player.slug, player.portal_key) });
+});
+
+// Set every player's goal at once
+router.post('/admin/goals', async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const goal = wholeDollars(req.body?.goal);
+  if (!(goal >= 50 && goal <= 100000)) return res.status(400).json({ message: 'Pick a goal between $50 and $100,000.' });
+  res.json({ ok: true, goal, updated: await setAllGoals(goal) });
 });
 
 router.post('/admin/players/:slug/reset-key', async (req, res) => {

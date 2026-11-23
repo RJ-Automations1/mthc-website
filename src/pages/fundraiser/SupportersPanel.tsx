@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { BadgeCheck, Eye, Mail, MessageSquare, Plus, Send, Trash2, UserX } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { api } from './shared';
@@ -58,6 +58,13 @@ function parseList(text: string) {
     });
 }
 
+/** Every player is asked to add this many people. */
+export const CONTACT_TARGET = 50;
+type SheetRow = { name: string; email: string; phone: string };
+const blankRows = (n: number): SheetRow[] => Array.from({ length: n }, () => ({ name: '', email: '', phone: '' }));
+const EMAIL_OK = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const sheetKey = (slug: string) => `mthc-sheet:${slug}`;
+
 function Status({ c }: { c: ContactRow }) {
   if (c.donated) return <span className="inline-flex items-center gap-1 rounded-full bg-green-100 text-green-800 px-2 py-0.5 text-xs font-semibold"><BadgeCheck className="w-3.5 h-3.5" /> Donated</span>;
   if (c.optedOut) return <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 text-gray-500 px-2 py-0.5 text-xs"><UserX className="w-3.5 h-3.5" /> Opted out</span>;
@@ -70,9 +77,18 @@ export default function SupportersPanel(props: Props) {
   const { slug, portalKey, playerName, contacts } = props;
   const first = playerName.split(/\s+/)[0];
   const headers = { 'x-portal-key': portalKey };
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  // Unsaved sheet rows survive a refresh (kept on this device only)
+  const [rows, setRows] = useState<SheetRow[]>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(sheetKey(slug)) || 'null');
+      if (Array.isArray(saved) && saved.length) return saved;
+    } catch { /* ignore */ }
+    return blankRows(Math.max(CONTACT_TARGET - contacts.length, 10));
+  });
+  const [badRows, setBadRows] = useState<number[]>([]);
+  useEffect(() => {
+    try { localStorage.setItem(sheetKey(slug), JSON.stringify(rows)); } catch { /* ignore */ }
+  }, [rows, slug]);
   const [bulk, setBulk] = useState('');
   const [showBulk, setShowBulk] = useState(false);
   const [consent, setConsent] = useState(false);
@@ -91,41 +107,55 @@ export default function SupportersPanel(props: Props) {
   const toAutoText = props.smsEnabled ? contacts.filter((c) => c.phone && c.smsConsent && !c.texted && !c.donated && !c.optedOut).length : 0;
   const readyToSend = (props.emailEnabled ? toEmail : 0) + toAutoText;
 
-  async function add(list: { name: string; email?: string; phone?: string }[]) {
+  /** Saves people; returns the names that were saved (null on error). */
+  async function add(list: { name: string; email?: string; phone?: string }[]): Promise<string[] | null> {
     setErr('');
     setMsg('');
     if (!consent && list.some((c) => c.phone)) {
       setErr('Check the box below to confirm the people you’re adding agreed to get texts from MTHC.');
-      return false;
+      return null;
     }
     setBusy(true);
     try {
       const r = await api<{ added: string[]; skipped: string[] }>(`/api/fundraiser/inbox/${slug}/contacts`, { method: 'POST', headers, json: { contacts: list, smsConsent: consent } });
-      setMsg(`Added ${r.added.length}.${r.skipped.length ? ` Skipped: ${r.skipped.join('; ')}` : ''}`);
+      setMsg(`Saved ${r.added.length} ${r.added.length === 1 ? 'person' : 'people'}.${r.skipped.length ? ` Not saved: ${r.skipped.join('; ')}` : ''}`);
       props.onChange();
-      return r.added.length > 0;
+      return r.added;
     } catch (e: any) {
       setErr(e.message);
-      return false;
+      return null;
     } finally {
       setBusy(false);
     }
   }
 
-  async function addOne(e: FormEvent) {
+  const setCell = (i: number, k: keyof SheetRow, v: string) =>
+    setRows((rs) => rs.map((r, j) => (j === i ? { ...r, [k]: v } : r)));
+  const isFilled = (r: SheetRow) => Boolean(r.name.trim() || r.email.trim() || r.phone.trim());
+  const filled = rows.map((r, i) => ({ ...r, i })).filter(isFilled);
+  const sheetHasPhone = filled.some((r) => r.phone.trim());
+
+  async function saveSheet(e: FormEvent) {
     e.preventDefault();
-    if (!email && !phone) return setErr('Add an email or a phone number (or both).');
-    if (await add([{ name, email, phone }])) {
-      setName('');
-      setEmail('');
-      setPhone('');
-    }
+    const bad = filled.filter((r) => !r.name.trim() || !EMAIL_OK.test(r.email.trim())).map((r) => r.i);
+    setBadRows(bad);
+    if (!filled.length) return setErr('Type at least one name and email in the sheet.');
+    if (bad.length) return setErr(`Every row needs a name and a valid email. Check row${bad.length > 1 ? 's' : ''} ${bad.map((i) => i + 1).join(', ')}.`);
+    const list = filled.map((r) => ({ name: r.name.trim(), email: r.email.trim(), phone: r.phone.trim() }));
+    const saved = await add(list);
+    if (!saved) return;
+    // Clear the rows that saved; keep any that didn't (e.g. already on the list) so they can be fixed
+    const savedNames = new Set(saved);
+    const left = rows.filter((r) => isFilled(r) && !savedNames.has(r.name.trim()));
+    const total = contacts.length + saved.length;
+    setRows([...left, ...blankRows(Math.max(CONTACT_TARGET - total - left.length, 10 - left.length, 0))]);
+    setBadRows([]);
   }
 
   async function addBulk() {
     const list = parseList(bulk);
     if (!list.length) return setErr('Paste one person per line: name, email and/or phone.');
-    if (await add(list)) {
+    if ((await add(list))?.length) {
       setBulk('');
       setShowBulk(false);
     }
@@ -184,8 +214,8 @@ export default function SupportersPanel(props: Props) {
       <div>
         <h2 className="section-heading !text-3xl !mb-1">My supporters</h2>
         <p className="text-gray-600">
-          Add the people you want invited. We send each one your personal invitation, follow up with anyone who hasn’t given,
-          and stop once they do. The fundraiser ends {props.endDate}.
+          Add {CONTACT_TARGET} people you want invited, with their name and email. We send each one your personal invitation,
+          follow up with anyone who hasn’t given, and stop once they do. The fundraiser ends {props.endDate}.
         </p>
       </div>
 
@@ -204,23 +234,50 @@ export default function SupportersPanel(props: Props) {
       </div>
 
       <div className="card hover:translate-y-0 p-5 space-y-4">
-        <form onSubmit={addOne} className="grid sm:grid-cols-[1.2fr_1.4fr_1fr_auto] gap-2 items-end">
-          <div>
-            <label htmlFor="cn" className="block text-xs font-medium text-gray-600 mb-1">Name</label>
-            <input id="cn" required maxLength={120} value={name} onChange={(e) => setName(e.target.value)} className="input" placeholder="Aunt Pam" />
+        <div>
+          <div className="flex flex-wrap items-end justify-between gap-2 mb-2">
+            <div>
+              <h3 className="font-display uppercase text-xl font-bold text-ink">Your list: {Math.min(contacts.length, CONTACT_TARGET)} of {CONTACT_TARGET}</h3>
+              <p className="text-sm text-gray-600">
+                {contacts.length >= CONTACT_TARGET
+                  ? 'You hit 50. Great work! You can keep adding more.'
+                  : `Add at least ${CONTACT_TARGET} people: family, friends, coaches, anyone who’d support you. ${CONTACT_TARGET - contacts.length} to go.`}
+              </p>
+            </div>
           </div>
-          <div>
-            <label htmlFor="ce" className="block text-xs font-medium text-gray-600 mb-1">Email</label>
-            <input id="ce" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input" placeholder="pam@email.com" />
+          <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={CONTACT_TARGET} aria-valuenow={contacts.length}>
+            <div className="h-full rounded-full bg-gradient-to-r from-maroon to-gold transition-all" style={{ width: `${Math.min(100, (contacts.length / CONTACT_TARGET) * 100)}%` }} />
           </div>
-          <div>
-            <label htmlFor="cp" className="block text-xs font-medium text-gray-600 mb-1">Cell phone</label>
-            <input id="cp" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="input" placeholder="404-555-1234" />
+        </div>
+
+        <form onSubmit={saveSheet} className="space-y-2">
+          <div className="hidden sm:grid grid-cols-[2rem_1fr_1.3fr_0.9fr] gap-1.5 text-xs font-medium text-gray-500 px-1">
+            <span>#</span><span>Name</span><span>Email</span><span>Cell (optional)</span>
           </div>
-          <button disabled={busy} className="btn-primary !px-4 disabled:opacity-60"><Plus className="w-4 h-4" /> Add</button>
+          <div className="max-h-[28rem] overflow-y-auto space-y-1.5 pr-1">
+            {rows.map((r, i) => {
+              const bad = badRows.includes(i);
+              const cls = `input !py-1.5 text-sm ${bad ? '!border-red-400 bg-red-50' : ''}`;
+              return (
+                <div key={i} className="grid grid-cols-[2rem_1fr] sm:grid-cols-[2rem_1fr_1.3fr_0.9fr] gap-1.5 items-center">
+                  <span className="text-xs text-gray-400 text-right pr-1">{contacts.length + i + 1}</span>
+                  <input aria-label={`Name ${i + 1}`} maxLength={120} value={r.name} onChange={(e) => setCell(i, 'name', e.target.value)} className={cls} placeholder={i === 0 ? 'Aunt Pam' : 'Name'} />
+                  <input aria-label={`Email ${i + 1}`} type="email" maxLength={200} value={r.email} onChange={(e) => setCell(i, 'email', e.target.value)} className={`${cls} col-start-2 sm:col-start-auto`} placeholder={i === 0 ? 'pam@email.com' : 'Email'} />
+                  <input aria-label={`Cell ${i + 1}`} type="tel" value={r.phone} onChange={(e) => setCell(i, 'phone', e.target.value)} className={`${cls} col-start-2 sm:col-start-auto`} placeholder="Cell (optional)" />
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            <button disabled={busy || !filled.length} className="btn-primary !px-5 text-sm disabled:opacity-50">
+              <Plus className="w-4 h-4" /> Save {filled.length || ''} {filled.length === 1 ? 'person' : 'people'}
+            </button>
+            <button type="button" onClick={() => setRows((rs) => [...rs, ...blankRows(10)])} className="text-sm text-maroon hover:underline">+ 10 more rows</button>
+            <span className="text-xs text-gray-400">Your typing is kept on this device until you save.</span>
+          </div>
         </form>
         <button type="button" onClick={() => setShowBulk((v) => !v)} className="text-sm text-maroon hover:underline">
-          {showBulk ? 'Hide' : 'Paste a whole list instead'}
+          {showBulk ? 'Hide' : 'Have a list already? Paste it instead'}
         </button>
         {showBulk && (
           <div className="space-y-2">
@@ -228,6 +285,7 @@ export default function SupportersPanel(props: Props) {
             <button type="button" onClick={addBulk} disabled={busy} className="btn-secondary !py-2 text-sm">Add everyone</button>
           </div>
         )}
+        {(sheetHasPhone || showBulk) && (
         <label className="flex items-start gap-2 text-xs text-gray-600 leading-relaxed">
           <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 accent-maroon shrink-0" />
           <span>
@@ -236,6 +294,7 @@ export default function SupportersPanel(props: Props) {
             STOP to opt out or HELP for help. <Link to="/fundraiser/texts" className="text-maroon underline">Text policy</Link>
           </span>
         </label>
+        )}
         {err && <p className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{err}</p>}
         {msg && <p className="p-3 rounded-lg bg-gold/20 text-sm">{msg}</p>}
 
