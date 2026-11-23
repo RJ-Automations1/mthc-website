@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { HeaderBacker, api, money, useTitle } from './shared';
+import { CONTACT_TARGET } from './SupportersPanel';
 
 interface AdminPlayer {
   slug: string;
@@ -238,12 +239,12 @@ export default function FundraiserAdmin() {
                     <td className="p-3 text-xs whitespace-nowrap">
                       {p.outreach.contacts ? (
                         <>
-                          {p.outreach.contacts} listed · {p.outreach.invited} invited<br />
+                          <span className={p.outreach.contacts >= CONTACT_TARGET ? 'text-green-700 font-semibold' : 'text-amber-700 font-semibold'}>{p.outreach.contacts}/{CONTACT_TARGET} listed</span> · {p.outreach.invited} invited<br />
                           {p.outreach.visited} opened · <span className="text-green-700 font-semibold">{p.outreach.donated} gave</span>
                           {p.outreach.opted_out ? ` · ${p.outreach.opted_out} opted out` : ''}
                         </>
                       ) : (
-                        <span className="text-gray-400">{p.hasPin ? 'Signed in, no list yet' : 'Not signed in yet'}</span>
+                        <span className="text-gray-400">0/{CONTACT_TARGET} · {p.hasPin ? 'signed in, no list yet' : 'not signed in yet'}</span>
                       )}
                     </td>
                     <td className="p-3 space-x-2 whitespace-nowrap">

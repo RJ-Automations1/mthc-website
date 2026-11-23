@@ -55,7 +55,7 @@ import { emailConfigured, emailEnabled, greetName, sendingOn, smsConfigured, sms
  *   GET  /api/fundraiser/gifts/:ref              donor's return page: confirms payment with Square
  *   GET  /api/fundraiser/inbox/:slug             player's envelopes            (header x-portal-key)
  *   POST /api/fundraiser/inbox/:slug/open/:ref   mark an envelope opened       (x-portal-key)
- *   PATCH /api/fundraiser/inbox/:slug            player edits goal/blurb       (x-portal-key)
+ *   PATCH /api/fundraiser/inbox/:slug            player edits note/email       (x-portal-key)
  *   GET  /api/fundraiser/admin                   every player + gift           (x-admin-key)
  *   POST /api/fundraiser/admin/players           add a player                  (x-admin-key)
  *   POST /api/fundraiser/admin/players/:slug/reset-key | DELETE …/players/:slug
@@ -272,12 +272,11 @@ router.post('/inbox/:slug/open/:ref', async (req, res) => {
 router.patch('/inbox/:slug', async (req, res) => {
   const player = await requirePlayer(req, res);
   if (!player) return;
-  const goal = req.body?.goal === undefined ? undefined : wholeDollars(req.body.goal);
-  if (goal !== undefined && !(goal >= 50 && goal <= 100000)) return res.status(400).json({ message: 'Pick a goal between $50 and $100,000.' });
+  // Goals are set by MTHC (admin) — players can't change theirs.
   const blurb = req.body?.blurb === undefined ? undefined : clean(req.body.blurb, 400);
   const email = req.body?.email === undefined ? undefined : clean(req.body.email, 200).toLowerCase();
   if (email && !isEmail(email)) return res.status(400).json({ message: 'That email address doesn’t look right.' });
-  await updatePlayer(player.id, { goal, blurb, email });
+  await updatePlayer(player.id, { blurb, email });
   res.json({ ok: true });
 });
 
