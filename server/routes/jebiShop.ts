@@ -2,6 +2,7 @@ import { Router } from 'express';
 import crypto from 'crypto';
 import { publicCatalog, findItem, SHOP_TIERS } from '../jebi/shopCatalog';
 import { createCheckout, isPaid, squareEnabled } from '../jebi/squareCheckout';
+import { sendOrderEmail } from '../jebi/orderEmail';
 import {
   createCode,
   getOrder,
@@ -143,7 +144,14 @@ async function handleOrder(req: any, res: any, kind: 'purchase' | 'claim') {
 
   try {
     const order = await placeOrder({ itemId: found.item.id, optionId: req.body?.optionId || null, color: clean(req.body?.color, 20) || null, size: clean(req.body?.size, 10) || null, qty, kind, tierCode, accessCode, ...buyer });
-    if (kind === 'claim') return res.json({ ok: true, ...order, payUrl: null, exactAmount: false });
+    // Email the order (item, size, color, ship-to) so it can be forwarded for shipping
+    const notify = (exactAmount: boolean) =>
+      void sendOrderEmail({ ...order, kind, tier: found.tier.tier, accessCode, exactAmount, ...buyer });
+
+    if (kind === 'claim') {
+      notify(false);
+      return res.json({ ok: true, ...order, payUrl: null, exactAmount: false });
+    }
 
     // Purchase: a Square checkout page pre-filled with this exact item and total
     let payUrl = PAY_URL;
@@ -160,6 +168,7 @@ async function handleOrder(req: any, res: any, kind: 'purchase' | 'claim') {
         console.error('JEBI Square checkout failed — falling back to the static Square link', e);
       }
     }
+    notify(exactAmount);
     res.json({ ok: true, ...order, payUrl, exactAmount });
   } catch (e) {
     if (e instanceof StockError) return res.status(409).json({ ok: false, message: e.message });
