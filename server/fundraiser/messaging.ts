@@ -128,7 +128,7 @@ const firstName = (n: string) => n.trim().split(/\s+/)[0];
 
 function subjectFor(m: MessageInput) {
   const p = firstName(m.playerName);
-  if (m.kind === 'invite') return `${m.playerName} invited you to support Morehouse Baseball`;
+  if (m.kind === 'invite') return `You're invited: ${p}'s Morehouse Baseball fundraiser`;
   if (m.kind === 'reminder') return `A reminder from ${p} — Morehouse Baseball fundraiser`;
   return `Last chance to support ${p} — fundraiser ends ${m.endDate}`;
 }
@@ -136,10 +136,10 @@ function subjectFor(m: MessageInput) {
 function leadFor(m: MessageInput) {
   const p = firstName(m.playerName);
   if (m.kind === 'invite')
-    return `${m.playerName}${m.playerNumber ? ` (#${m.playerNumber})` : ''} plays for Morehouse College Baseball and asked us to send you a personal invitation to support the team.`;
+    return `We're holding our Morehouse Baseball fundraiser this season, and ${p} asked us to send you a personal invitation to be part of it.`;
   if (m.kind === 'reminder')
-    return `Just a friendly reminder — ${p} is still working toward their fundraising goal for Morehouse Baseball, and your support would mean a lot.`;
-  return `The Maroon Tiger fundraiser ends ${m.endDate}. There's still time to support ${p} and send a good-luck note.`;
+    return `Just a friendly reminder — our Morehouse Baseball fundraiser is still going, and ${p} would love your support.`;
+  return `Our Morehouse Baseball fundraiser ends ${m.endDate}. There's still time to support ${p} and send a good-luck note.`;
 }
 
 export function emailFor(m: MessageInput) {
@@ -152,7 +152,7 @@ export function emailFor(m: MessageInput) {
     '',
     lead,
     note ? `\n"${note}" — ${p}\n` : '',
-    `Give any amount and leave ${p} a good-luck note. It's delivered to them in a sealed envelope:`,
+    `Give any amount and leave ${p} a good-luck note. It's delivered to ${p} in a sealed envelope:`,
     m.link,
     '',
     'Thank you for supporting Morehouse Baseball.',
@@ -174,7 +174,7 @@ ${m.playerPhoto ? `<img src="${esc(m.playerPhoto)}" width="96" height="96" alt="
 <p style="margin:0 0 14px">Hi ${esc(greetName(m.contactName))},</p>
 <p style="margin:0 0 14px">${esc(lead)}</p>
 ${note ? `<p style="margin:0 0 14px;padding:14px 16px;background:#faf7f2;border-left:4px solid #C9A54E;font-style:italic">“${esc(note)}” — ${esc(p)}</p>` : ''}
-<p style="margin:0 0 22px">Give any amount and leave ${esc(p)} a good-luck note — it’s delivered to them in a sealed envelope.</p>
+<p style="margin:0 0 22px">Give any amount and leave ${esc(p)} a good-luck note — it’s delivered to ${esc(p)} in a sealed envelope.</p>
 <p style="text-align:center;margin:0 0 26px"><a href="${esc(m.link)}" style="display:inline-block;background:#7a1d2d;color:#ffffff;text-decoration:none;font-weight:bold;padding:14px 28px;border-radius:999px">Open your invitation</a></p>
 <p style="margin:0;color:#6b6b6b;font-size:14px">Thank you for supporting Morehouse Baseball.<br>Maroon Tiger Homerun Club</p>
 </td></tr>
