@@ -148,7 +148,7 @@ export function emailFor(m: MessageInput) {
   const lead = leadFor(m);
   const note = m.personalNote?.trim();
   const text = [
-    `Hi ${greetName(m.contactName)},`,
+    `Hey ${greetName(m.contactName)},`,
     '',
     lead,
     note ? `\n"${note}" — ${p}\n` : '',
@@ -171,7 +171,7 @@ ${m.playerPhoto ? `<img src="${esc(m.playerPhoto)}" width="96" height="96" alt="
 <p style="margin:0;color:#6b6b6b;font-size:14px">${esc(m.playerName)}${m.playerNumber ? ` · #${esc(m.playerNumber)}` : ''} · Morehouse Baseball</p>
 </td></tr>
 <tr><td style="padding:16px 28px;font-size:16px;line-height:1.55">
-<p style="margin:0 0 14px">Hi ${esc(greetName(m.contactName))},</p>
+<p style="margin:0 0 14px">Hey ${esc(greetName(m.contactName))},</p>
 <p style="margin:0 0 14px">${esc(lead)}</p>
 ${note ? `<p style="margin:0 0 14px;padding:14px 16px;background:#faf7f2;border-left:4px solid #C9A54E;font-style:italic">“${esc(note)}” — ${esc(p)}</p>` : ''}
 <p style="margin:0 0 22px">Give any amount and leave ${esc(p)} a good-luck note, and it’ll be delivered to ${esc(p)}.</p>
