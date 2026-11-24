@@ -136,7 +136,7 @@ function subjectFor(m: MessageInput) {
 function leadFor(m: MessageInput) {
   const p = firstName(m.playerName);
   if (m.kind === 'invite')
-    return `We're holding our Morehouse Baseball fundraiser this season, and ${p} asked us to send you a personal invitation to be part of it.`;
+    return `We're holding our Morehouse Baseball fundraiser this season, and ${p} wants to send you a personal invitation to be part of it.`;
   if (m.kind === 'reminder')
     return `Just a friendly reminder — our Morehouse Baseball fundraiser is still going, and ${p} would love your support.`;
   return `Our Morehouse Baseball fundraiser ends ${m.endDate}. There's still time to support ${p} and send a good-luck note.`;
