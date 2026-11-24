@@ -174,9 +174,8 @@ ${m.playerPhoto ? `<img src="${esc(m.playerPhoto)}" width="96" height="96" alt="
 <p style="margin:0 0 14px">Hey ${esc(greetName(m.contactName))},</p>
 <p style="margin:0 0 14px">${esc(lead)}</p>
 ${note ? `<p style="margin:0 0 14px;padding:14px 16px;background:#faf7f2;border-left:4px solid #C9A54E;font-style:italic">“${esc(note)}” — ${esc(p)}</p>` : ''}
-<p style="margin:0 0 22px">Give any amount and leave ${esc(p)} a good-luck note, and it’ll be delivered to ${esc(p)}.</p>
+<p style="margin:0 0 22px">Give any amount and leave ${esc(p)} a good-luck note, and it’ll be delivered to ${esc(p)}. <a href="${esc(m.link)}" style="color:#7a1d2d;font-weight:bold;text-decoration:underline">Click here</a> to give.</p>
 <p style="text-align:center;margin:0 0 26px"><a href="${esc(m.link)}" style="display:inline-block;background:#7a1d2d;color:#ffffff;text-decoration:none;font-weight:bold;padding:14px 28px;border-radius:999px">Open your invitation</a></p>
-<p style="text-align:center;margin:-12px 0 26px;font-size:14px;color:#6b6b6b">Or tap this link:<br><a href="${esc(m.link)}" style="color:#7a1d2d;font-weight:bold;word-break:break-all">${esc(m.link)}</a></p>
 <p style="margin:0;color:#6b6b6b;font-size:14px">Thank you for supporting Morehouse Baseball.<br>Maroon Tiger Homerun Club</p>
 </td></tr>
 <tr><td style="padding:16px 28px 24px;font-size:12px;color:#9b9b9b;text-align:center">Sent on behalf of ${esc(m.playerName)}. <a href="${esc(m.unsubscribeUrl)}" style="color:#9b9b9b">Stop these emails</a></td></tr>
