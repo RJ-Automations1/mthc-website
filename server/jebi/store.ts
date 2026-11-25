@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import pg from 'pg';
 import { SHOP_TIERS, findItem, priceOf, colorLabel } from './shopCatalog';
+import { setSheetStatus } from './orderSheet';
 
 /**
  * JEBI shop orders — every purchase and every free sponsor claim is a row here,
@@ -256,6 +257,7 @@ export async function getOrder(ref: string) {
 export async function setOrderStatus(ref: string, status: OrderStatus) {
   await ensureTable();
   const { rowCount } = await getPool()!.query(`UPDATE jebi_shop_orders SET status = $2 WHERE ref = $1`, [ref, status]);
+  if (rowCount === 1) void setSheetStatus(ref, status); // keep the Google Sheet in step
   return rowCount === 1;
 }
 
