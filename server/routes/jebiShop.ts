@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { publicCatalog, findItem, SHOP_TIERS } from '../jebi/shopCatalog';
 import { createCheckout, isPaid, squareEnabled } from '../jebi/squareCheckout';
 import { sendOrderEmail } from '../jebi/orderEmail';
+import { addOrderToSheet } from '../jebi/orderSheet';
 import {
   createCode,
   getOrder,
@@ -145,8 +146,11 @@ async function handleOrder(req: any, res: any, kind: 'purchase' | 'claim') {
   try {
     const order = await placeOrder({ itemId: found.item.id, optionId: req.body?.optionId || null, color: clean(req.body?.color, 20) || null, size: clean(req.body?.size, 10) || null, qty, kind, tierCode, accessCode, ...buyer });
     // Email the order (item, size, color, ship-to) so it can be forwarded for shipping
-    const notify = (exactAmount: boolean) =>
-      void sendOrderEmail({ ...order, kind, tier: found.tier.tier, accessCode, exactAmount, ...buyer });
+    const notify = (exactAmount: boolean) => {
+      const data = { ...order, kind, tier: found.tier.tier, accessCode, exactAmount, ...buyer };
+      void sendOrderEmail(data);
+      void addOrderToSheet(data); // "JEBI Shop Orders" Google Sheet
+    };
 
     if (kind === 'claim') {
       notify(false);
